@@ -14,6 +14,7 @@ config = {
         path: buildPath,
         publicPath: '/build/',
         filename: 'bundle.js',
+        library: 'sextant',
         sourcePrefix: '' // required for webpack
     },
     plugins: [

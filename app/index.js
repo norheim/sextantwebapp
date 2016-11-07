@@ -126,6 +126,33 @@ cesiumContainer.height = window.innerHeight;
 // require('unknown-module')
 // } syntax-error
 
+var geolocation = require('geolocation')
+var int = self.setInterval(getLocation, 1000);
+var coordsContainer = document.getElementById('coords');
+var doPrintLatLong = true;
+
+function stop(){
+	console.log('stopped');
+	doPrintLatLong = false;
+}
+
+function getLocation(){
+	if (doPrintLatLong){
+		geolocation.getCurrentPosition(function (err, position) {
+		  if (err) throw err
+		  	var coords = position.coords;
+		  	var wrappedCoords = coords.longitude.toString() + ',' + 
+		  	coords.latitude.toString() +'</br>';
+		  	coordsContainer.innerHTML = coordsContainer.innerHTML + wrappedCoords;
+		  	//console.log(coords.longitude, coords.latitude);
+		})
+	}
+}
+
+module.exports = {
+  stop: stop
+};
+
 if (module.hot) {
   module.hot.accept();
   module.hot.dispose(function() {
