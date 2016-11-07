@@ -1,0 +1,16 @@
+.body {
+	display:table;
+	width: 100vw;
+}
+
+.cell {
+	display:table-cell
+}
+
+#cesiumContainer {
+	height: 100vh;
+}
+
+#credits {
+	display: none;
+}
