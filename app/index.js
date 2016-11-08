@@ -1,4 +1,4 @@
-require('./socket.js')
+messenger = require('./socket.js')
 require('bootstrap-loader');
 require('cesium/Source/Widgets/widgets.css');
 require('./style.css')
@@ -12,10 +12,12 @@ var Cartesian3 = require('cesium/Source/Core/Cartesian3');
 var CesiumMath = require('cesium/Source/Core/Math');
 var Cartographic = require('cesium/Source/Core/Cartographic');
 var Ellipsoid = require('cesium/Source/Core/Ellipsoid');
+var Color = require('cesium/Source/Core/Color');
 var ScreenSpaceEventHandler = require('cesium/Source/Core/ScreenSpaceEventHandler');
 var ScreenSpaceEventType = require('cesium/Source/Core/ScreenSpaceEventType');
 var createTileMapServiceImageryProvider = require('cesium/Source/Scene/createTileMapServiceImageryProvider');
 var CesiumTerrainProvider = require('cesium/Source/Core/CesiumTerrainProvider');
+var CallbackProperty = require('cesium/Source/DataSources/CallbackProperty');
 
 // Set simple geometry for the full planet
 var terrainProvider = new EllipsoidTerrainProvider();
@@ -30,7 +32,6 @@ var terrainExaggeration = 2.0;
 
 var viewer = new Viewer('cesiumContainer', {
 	timeline : false,
-	animation : false,
 	creditContainer : 'credits',
     terrainExaggeration : terrainExaggeration,
     baseLayerPicker : false,
@@ -65,7 +66,13 @@ function switchTerrain(){
       hoverLatLong();
       //addMesh();
 }
-    
+
+function zoom(){    
+	hawaii = viewer.scene.camera.setView({
+      destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
+    });
+}
+
 hawaii = viewer.scene.camera.flyTo({
       destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
       duration: 3,
@@ -133,7 +140,51 @@ var doPrintLatLong = true;
 
 function stop(){
 	console.log('stopped');
+	messenger.emit('message','stopped');
+	messenger.emit('stop','');
 	doPrintLatLong = false;
+}
+
+function DynamicLines(){
+	this.points = [];
+	this.pointcounter = 0;
+	this.entity = Object();
+
+	this.toCartesian = function(){
+		console.log(this.pointcounter);
+		return Cartesian3.fromDegreesArray(this.points);
+	}
+
+	this.addPoint = function(lat, lon){
+		this.points.push(lon, lat);
+		this.pointcounter+=1;
+		if(this.pointcounter == 2){
+			console.log(this.points);
+			this.entity = viewer.entities.add({
+			    name : 'GPS coordinates',
+			    polyline : {
+			        positions : new CallbackProperty(this.toCartesian.bind(this), false),
+			        width : 10,
+			        material : Color.RED
+			    }
+			});
+			this.zoomTo()
+		}else if(this.pointcounter > 2){
+			this.points = this.points.concat([lon,lat]);
+			console.log(this.points);
+		}
+
+	} 
+
+	this.zoomTo = function(){
+		viewer.zoomTo(this.entity);
+	}
+}
+
+gps_tracks = new DynamicLines();
+
+function zoomtotracks(){
+	return gps_tracks.zoomTo();
 }
 
 function getLocation(){
@@ -144,13 +195,17 @@ function getLocation(){
 		  	var wrappedCoords = coords.longitude.toString() + ',' + 
 		  	coords.latitude.toString() +'</br>';
 		  	coordsContainer.innerHTML = coordsContainer.innerHTML + wrappedCoords;
+		  	messenger.sendCoords(coords);
+		  	gps_tracks.addPoint(coords.latitude, coords.longitude);
 		  	//console.log(coords.longitude, coords.latitude);
 		})
 	}
 }
 
 module.exports = {
-  stop: stop
+  stop: stop,
+  zoom: zoom,
+  zoomtotracks: zoomtotracks
 };
 
 if (module.hot) {
