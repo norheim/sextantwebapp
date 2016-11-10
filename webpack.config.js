@@ -15,7 +15,7 @@ config = {
         publicPath: '/build/',
         filename: 'bundle.js',
         library: 'sextant',
-        sourcePrefix: '' // required for webpack
+        sourcePrefix: '' // required for cesium
     },
     plugins: [
         new webpack.optimize.OccurenceOrderPlugin(),

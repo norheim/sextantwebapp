@@ -3,6 +3,11 @@
 	width: 100vw;
 }
 
+#coords{
+    height: 200px;
+    overflow: scroll;
+}
+
 .cell {
 	display:table-cell
 }

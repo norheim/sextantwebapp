@@ -13,7 +13,6 @@ var CesiumMath = require('cesium/Source/Core/Math');
 var Cartographic = require('cesium/Source/Core/Cartographic');
 var Ellipsoid = require('cesium/Source/Core/Ellipsoid');
 var Color = require('cesium/Source/Core/Color');
-var sampleTerrain = require('cesium/Source/Core/sampleTerrain');
 var ScreenSpaceEventHandler = require('cesium/Source/Core/ScreenSpaceEventHandler');
 var ScreenSpaceEventType = require('cesium/Source/Core/ScreenSpaceEventType');
 var createTileMapServiceImageryProvider = require('cesium/Source/Scene/createTileMapServiceImageryProvider');
@@ -29,7 +28,7 @@ var imageryProvider = createTileMapServiceImageryProvider({
        fileExtension : 'jpg'
    });
 
-var terrainExaggeration = 1.0;
+var terrainExaggeration = 2.0;
 
 var viewer = new Viewer('cesiumContainer', {
 	timeline : false,
@@ -134,8 +133,8 @@ cesiumContainer.height = window.innerHeight;
 // require('unknown-module')
 // } syntax-error
 
-//var geolocation = require('geolocation')
-
+var geolocation = require('geolocation')
+var int = self.setInterval(getLocation, 1000);
 var coordsContainer = document.getElementById('coords');
 var doPrintLatLong = true;
 
@@ -188,132 +187,25 @@ function zoomtotracks(){
 	return gps_tracks.zoomTo();
 }
 
-var time = Date.now()
-var latitude0 = 19.36738515;
-var longitude0 = -155.20627158;
-
-function constant(){
-	var now = Date.now();
-	var coords = {
-		latitude : latitude0,
-		longitude : longitude0
-	};
-	return coords
-}
-
-function getLocation(data){
+function getLocation(){
 	if (doPrintLatLong){
-			coords = JSON.parse(data)
+		geolocation.getCurrentPosition(function (err, position) {
+		  if (err) throw err
+		  	var coords = position.coords;
 		  	var wrappedCoords = coords.longitude.toString() + ',' + 
 		  	coords.latitude.toString() +'</br>';
 		  	coordsContainer.innerHTML = coordsContainer.innerHTML + wrappedCoords;
+		  	messenger.sendCoords(coords);
 		  	gps_tracks.addPoint(coords.latitude, coords.longitude);
 		  	//console.log(coords.longitude, coords.latitude);
-		}
+		})
+	}
 }
-
-serialrequestraw = messenger.addBounceRequest('serialstatus', function(data){
-		document.getElementById('serialports').innerHTML = data;
-	});
-
-gpstrack = messenger.addBounceRequest('gpstrack', function(data){
-		console.log('got gps data');
-		getLocation(data);
-	});
-
-
-var ellipsoid = viewer.scene.globe.ellipsoid;
-
-waypointrequest = messenger.addBounceRequest('waypoints', function(data){
-		console.log(data);
-		waypoints = JSON.parse(data);
-		console.log(data);
-		coordarray = [];
-		
-		for(i in waypoints['latitude']){
-			cartographicpoint = Cartographic.fromDegrees(waypoints['longitude'][i], waypoints['latitude'][i])
-			coordarray.push(cartographicpoint);
-		}
-
-		/*var raisedPositions = ellipsoid.cartographicArrayToCartesianArray(coordarray);
-		entity = viewer.entities.add({
-		        polyline : {
-		            positions : raisedPositions,
-		            width : 10,
-		            material : Color.RED
-		        }
-		    });
-		viewer.zoomTo(entity);*/
-		
-		console.log(coordarray);
-		sampleTerrain(viewer.terrainProvider, 15, coordarray)
-		.then(function(raisedPositionsCartograhpic) {
-			console.log(raisedPositionsCartograhpic[0].height)
-		    var raisedPositions = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic);
-		    console.log(raisedPositions)
-		    entity = viewer.entities.add({
-		        polyline : {
-		            positions : raisedPositions,
-		            width : 2,
-		            material : Color.RED
-		        }
-		    });
-		    viewer.zoomTo(entity);
-		});
-	});
-
-getpextant = messenger.addBounceRequest('pextant', function(data){
-		console.log(data);
-		waypoints = JSON.parse(data);
-		console.log(data);
-		coordarray = [];
-		
-		for(i in waypoints['latitude']){
-			cartographicpoint = Cartographic.fromDegrees(waypoints['longitude'][i], waypoints['latitude'][i])
-			coordarray.push(cartographicpoint);
-		}
-
-		/*var raisedPositions = ellipsoid.cartographicArrayToCartesianArray(coordarray);
-		entity = viewer.entities.add({
-		        polyline : {
-		            positions : raisedPositions,
-		            width : 10,
-		            material : Color.RED
-		        }
-		    });
-		viewer.zoomTo(entity);*/
-		
-		console.log(coordarray);
-		sampleTerrain(viewer.terrainProvider, 15, coordarray)
-		.then(function(raisedPositionsCartograhpic) {
-			console.log(raisedPositionsCartograhpic[0].height)
-		    var raisedPositions = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic);
-		    console.log(raisedPositions)
-		    entity = viewer.entities.add({
-		        polyline : {
-		            positions : raisedPositions,
-		            width : 2,
-		            material : Color.ORANGE
-		        }
-		    });
-		    viewer.zoomTo(entity);
-		});
-	});
-
-serialrequest = function(){
-	console.log('serialstate');
-	serialrequestraw(); 
-}
-
 
 module.exports = {
-  start: gpstrack,
   stop: stop,
   zoom: zoom,
-  zoomtotracks: zoomtotracks,
-  serialrequest: serialrequest,
-  getwaypoints: waypointrequest,
-  getpextant: getpextant
+  zoomtotracks: zoomtotracks
 };
 
 if (module.hot) {

@@ -27,14 +27,22 @@
 			</div>
 			<button type="button" class="btn btn-default">Run pextant</button>
 		</form>
-	    <input
-	        type="text" size="10" style="text-align: center"
-	        placeholder="Type something"
-	    />
     </div>
+    <button class="btn btn-default" type="button" onclick="start()">Start GPS</button>
 	<button class="btn btn-default" type="button" onclick="stop()">Stop GPS</button>
 	<button class="btn btn-default" type="button" onclick="zoom()">Zoom</button>
 	<button class="btn btn-default" type="button" onclick="zoomToTracks()">Zoom to GPS</button>
+	<button class="btn btn-default" type="button" onclick="getwaypoints()">Get waypoints</button>
+	<button class="btn btn-default" type="button" onclick="getpextant()">Get pextant</button>
+	<div id="serialport">
+		<button class="btn btn-default" type="button" onclick="serialstatus()">Serial status</button>
+		<input
+	        type="text" size="10" style="text-align: center"
+	        placeholder="COM port name"
+	    />
+		<div id="serialports"></div>
+	</div>
+	Coordinates
     <div id="coords">
 
     </div>
@@ -47,13 +55,29 @@
 <script src="/build/bundle.js"></script>
 <script>
 	function stop(){
+		console.log(sextant);
 		sextant.stop();
+	}
+	function start(){
+		sextant.start();
 	}
 	function zoom(){
 		sextant.zoom();
 	}
 	function zoomToTracks(){
 		sextant.zoomtotracks();
+	}
+	function serialstatus(){
+		console.log('serialstatus0')
+		sextant.serialrequest();
+	}
+	function getwaypoints(){
+		console.log('getting waypoints');
+		sextant.getwaypoints();
+	}
+	function getpextant(){
+		console.log('getting waypoints');
+		sextant.getpextant();
 	}
 </script>
 </body>
