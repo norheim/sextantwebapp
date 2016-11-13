@@ -48,15 +48,17 @@ function zoom(){
 }
 
 function heading(headingAngle) {
-    console.log(headingAngle);
-    camera.setView({
-        destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
-        orientation : {
-            heading : CesiumMath.toRadians(headingAngle),
-            pitch : -CesiumMath.toRadians(90),
-            roll : 0.0
-        }
-    })
+    if (headingAngle != undefined) {
+        console.log(headingAngle);
+        camera.setView({
+            destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
+            orientation: {
+                heading: CesiumMath.toRadians(headingAngle),
+                pitch: -CesiumMath.toRadians(90),
+                roll: 0.0
+            }
+        })
+    }
 }
 function DynamicLines(){
 	this.points = [];
