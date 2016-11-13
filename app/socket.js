@@ -1,82 +1,74 @@
-var socket = require('socket.io-client')('http://localhost:3000');
+var socket = require('socket.io-client')('http://localhost:2999');
 
-function BounceRequest(channelname, callbackfx, messenger){
-	console.log(channelname);
-	this.channelname = channelname;
-	this.callbackfx = callbackfx;
+function ComsChannels(messenger, settings){
 	this.messenger = messenger;
-	
-	socket.on(channelname, function(data){
-		this.callbackfx(data);
-	}.bind(this));
+	this.channelname = settings.name;
+	this.settings = settings;
 
-	this.request = function(){
-		console.log('request sent');
-		console.log(this.channelname);
-		this.messenger.emit(this.channelname, 'hihihi')
-	}.bind(this)
+	this.connect = function(data){
+		if('initial' in settings){
+			initialMessage = settings.initial(data);
+			this.messenger.emit(initialMessage);
+		}
+		this.messenger.socket_ref.on(this.channelname, function(data){
+			console.log('Got a message from: '+this.channelname);
+			this.settings.onrecieve(data);
+		}.bind(this));
+	};
+
+	this.send = function(data){
+		console.log('Sending to: '+this.channelname);
+		sendData = this.settings.send(data);
+		this.messenger.emit(this.channelname,sendData);
+	};
+
+	this.requestData = function(data){
+		console.log('Requesting: '+this.channelname);
+		this.messenger.emit(this.channelname, '');
+	}
 }
 
-function Messenger(){
+function Messenger(socket_ref){
 	this.socketLoaded = false;
-	this.socket = socket;
-	this.bounceRequests = {};
-
-	this.sendCoords = function(coords){
-		coordsMin = {
-			time: (new Date()).toJSON(),
-			latitude : coords.latitude,
-			longitude : coords.longitude
-		}
-		jsonmsg = JSON.stringify(coordsMin);
-		console.log(jsonmsg);
-		this.emit('coords', jsonmsg);
-	}
-
-	this.requestCoords = function(){
-		this.emit('serialstatus', '');
-	}
+	this.socket_ref = socket_ref;
+	this.channels = {};
 
 	this.emit = function(channel, jsonmsg){
 		if(this.socketLoaded){
-			console.log('socker emitting: '+channel.toString());
-			this.socket.emit(channel, jsonmsg);
+			console.log('socket emitting: '+channel.toString());
+			this.socket_ref.emit(channel,jsonmsg);
 		}else{
 			console.log('socket not loaded yet');
 		}
-	}
+	};
 
-	this.addBounceRequest = function(channelname, callbackfx){
-		console.log('adding new bounce');
-		br = new BounceRequest(channelname, callbackfx, this);
-		//console.log(channelname);
-		//console.log(br);
-		this.bounceRequests[channelname] = br;
-		console.log('added bounce');
-		return this.bounceRequests[channelname].request
+	this.addChannel= function(settings){
+		comsChannel = new ComsChannels(this, settings);
+		this.channels[settings.name] = comsChannel;
+		return comsChannel;
 	}
 
 }
 
-messenger = new Messenger();
+messenger = new Messenger(socket);
+
+messages = messenger.addChannel({
+	name: 'message',
+	send: function (data) {
+		return data;
+	},
+	onrecieve: function (data) {
+		console.log(data);
+	}
+});
 
 socket.on('connect', function(){
-	socket.emit('message','getting you loud and clear');
+	console.log('connected');
 	messenger.socketLoaded = true;
-});
-
-socket.on('event', function(data){
-	console.log(data);
-});
-
-socket.on('message', function(data){
-	console.log(data);
-});
-
-
-/*socket.on('serialstatus', function(data){
-	console.log(data);
-});*/
+	console.log(messenger.channels);
+	messenger.channels['message'].connect();
+	messenger.channels['message'].send('getting you loud and clear');
+}.bind(this));
 
 socket.on('disconnect', function(){
 	console.log('disconnect');
