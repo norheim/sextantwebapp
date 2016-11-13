@@ -80,6 +80,26 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
         }, ScreenSpaceEventType.MOUSE_MOVE);
     };
 
+    // returns positions projected on the terrain in Cartesian3, required for entity creation
+    this.getRaisedPositions = function (latLongCoords) {
+        return new Promise(function(resolve, reject) {
+            cartographicArray = [];
+            for (i in latLongCoords['latitude']) {
+                cartographicPoint = Cartographic.fromDegrees(latLongCoords['longitude'][i], latLongCoords['latitude'][i]);
+                cartographicArray.push(cartographicPoint);
+            }
+            self = this;
+            var ellipsoid = this.viewer.scene.globe.ellipsoid;
+            sampleTerrain(this.viewer.terrainProvider, 15, cartographicArray)
+                .then(function (raisedPositionsCartograhpic) {
+                    raisedPositionsCartograhpic.forEach(function (coord, i) {
+                        raisedPositionsCartograhpic[i].height *= self.terrainExaggeration;
+                    });
+                    resolve(ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic));
+                });
+        }.bind(this));
+    };
+
     this.initialize = function(){
         // Set simple geometry for the full planet
         var terrainProvider = new EllipsoidTerrainProvider();

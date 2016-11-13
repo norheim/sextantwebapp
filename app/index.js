@@ -9,6 +9,8 @@ var CesiumMath = require('cesium/Source/Core/Math');
 var Cartographic = require('cesium/Source/Core/Cartographic');
 var Ellipsoid = require('cesium/Source/Core/Ellipsoid');
 var Color = require('cesium/Source/Core/Color');
+var Transforms = require('cesium/Source/Core/Transforms');
+var PointPrimitiveCollection = require('cesium/Source/Scene/PointPrimitiveCollection');
 var sampleTerrain = require('cesium/Source/Core/sampleTerrain');
 var ScreenSpaceEventHandler = require('cesium/Source/Core/ScreenSpaceEventHandler');
 var ScreenSpaceEventType = require('cesium/Source/Core/ScreenSpaceEventType');
@@ -18,7 +20,26 @@ var viewerWrapper = new ViewerWrapper('http://localhost', 3001, 1, 'cesiumContai
 var viewer = viewerWrapper.viewer;
 
 var camera = viewer.scene.camera;
-
+/*
+var center = Cartesian3.fromDegrees(-155.20178273, 19.36479555);
+var points = scene.primitives.add(new PointPrimitiveCollection());
+pointPrimitives.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+pointPrimitives.add({
+	color : Color.ORANGE,
+	position : new Cartesian3(0.0, 0.0, 0.0) // center
+});
+pointPrimitives.add({
+	color : Color.YELLOW,
+	position : new Cartesian3(1000000.0, 0.0, 0.0) // east
+});
+pointPrimitives.add({
+	color : Cesium.Color.GREEN,
+	position : new Cartesian3(0.0, 1000000.0, 0.0) // north
+});
+pointPrimitives.add({
+	color : Cesium.Color.CYAN,
+	position : new Cartesian3(0.0, 0.0, 1000000.0) // up
+});*/
 
 function zoom(){
 	hawaii = camera.setView({
@@ -33,8 +54,8 @@ function DynamicLines(){
 
 	this.toCartesian = function(){
 		//console.log(this.pointcounter);
-		/*coordarray = Cartographic.fromDegreesArray(this.points);
-		sampleTerrain(viewer.terrainProvider, 15, coordarray)
+		/*cartographicArray = Cartographic.fromDegreesArray(this.points);
+		sampleTerrain(viewer.terrainProvider, 15, cartographicArray)
 			.then(function (raisedPositionsCartograhpic) {
 				console.log('made it here');
 				raisedPositionsCartograhpic.forEach(function (coord, i) {
@@ -45,7 +66,7 @@ function DynamicLines(){
 				return raisedPositionsOut;
 			});*/
 		return Cartesian3.fromDegreesArray(this.points);
-	}
+	};
 
 	this.addPoint = function(lat, lon){
 		this.pointcounter+=1;
@@ -125,84 +146,40 @@ var ellipsoid = viewer.scene.globe.ellipsoid;
 waypointrequest = messenger.addChannel({
 	name: 'waypoints',
 	onrecieve: function (data) {
-		console.log(data);
-		waypoints = JSON.parse(data);
-		coordarray = [];
-		console.log(waypoints['latitude']);
-		for (i in waypoints['latitude']) {
-			console.log(i);
-			cartographicpoint = Cartographic.fromDegrees(waypoints['longitude'][i], waypoints['latitude'][i])
-			coordarray.push(cartographicpoint);
-		}
-		console.log(coordarray);
-
-		sampleTerrain(viewer.terrainProvider, 15, coordarray)
-			.then(function (raisedPositionsCartograhpic) {
-				console.log('made it here');
-				raisedPositionsCartograhpic.forEach(function (coord, i) {
-					raisedPositionsCartograhpic[i].height *= viewerWrapper.terrainExaggeration;
-				});
-				console.log(raisedPositionsCartograhpic[0].height);
-				var raisedPositions = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic);
-				console.log(raisedPositions);
-				entity = viewer.entities.add({
-					polyline: {
-						positions: raisedPositions,
-						width: 2,
-						material: Color.RED
-					}
-				});
-				viewer.zoomTo(entity);
-			});
-	}
+        console.log(data);
+        midPoints = JSON.parse(data);
+        viewerWrapper.getRaisedPositions(midPoints).then(function(raisedMidPoints){
+            console.log(raisedMidPoints);
+            entity = viewer.entities.add({
+                polyline: {
+                    positions: raisedMidPoints,
+                    width: 2,
+                    material: Color.RED
+                }
+            });
+            viewer.zoomTo(entity);
+        });
+    }
 });
 console.log(messenger);
 
 getpextant = messenger.addChannel({
 	name:'pextant',
-	onrecieve: function(data){
-		console.log(data);
-		waypoints = JSON.parse(data);
-		console.log(data);
-		coordarray = [];
-		
-		for(i in waypoints['latitude']){
-			cartographicpoint = Cartographic.fromDegrees(waypoints['longitude'][i], waypoints['latitude'][i])
-			coordarray.push(cartographicpoint);
-		}
-		/*
-		var raisedPositions = ellipsoid.cartographicArrayToCartesianArray(coordarray);
-		entity = viewer.entities.add({
-		        polyline : {
-		            positions : raisedPositions,
-		            width : 10,
-		            material : Color.RED
-		        }
-		    });
-		viewer.zoomTo(entity);*/
-		
-		console.log(coordarray);
-		console.log(coordarray);
-
-		sampleTerrain(viewer.terrainProvider, 15, coordarray)
-			.then(function (raisedPositionsCartograhpic) {
-				console.log('made it here');
-				raisedPositionsCartograhpic.forEach(function (coord, i) {
-					raisedPositionsCartograhpic[i].height *= viewerWrapper.terrainExaggeration;
-				});
-				console.log(raisedPositionsCartograhpic[0].height);
-				var raisedPositions = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic);
-				console.log(raisedPositions);
-				entity = viewer.entities.add({
-					polyline: {
-						positions: raisedPositions,
-						width: 2,
-						material: Color.ORANGE
-					}
-				});
-				viewer.zoomTo(entity);
-			});
-	}
+	onrecieve: function (data) {
+        console.log(data);
+        midPoints = JSON.parse(data);
+        viewerWrapper.getRaisedPositions(midPoints).then(function(raisedMidPoints){
+            console.log(raisedMidPoints);
+            entity = viewer.entities.add({
+                polyline: {
+                    positions: raisedMidPoints,
+                    width: 2,
+                    material: Color.ORANGE
+                }
+            });
+            viewer.zoomTo(entity);
+        });
+    }
 });
 
 
