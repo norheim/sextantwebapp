@@ -59,7 +59,8 @@
 		sextant.stop();
 	}
 	function start(){
-		sextant.start();
+		gpstrack.connect('COM6');
+		gpstrack.requestData();
 	}
 	function zoom(){
 		sextant.zoom();
@@ -69,15 +70,18 @@
 	}
 	function serialstatus(){
 		console.log('serialstatus0')
-		sextant.serialrequest();
+		sextant.serialrequest.connect();
+		sextant.serialrequest.requestData();
 	}
 	function getwaypoints(){
 		console.log('getting waypoints');
-		sextant.getwaypoints();
+		sextant.getwaypoints.connect();
+		sextant.getwaypoints.requestData();
 	}
 	function getpextant(){
 		console.log('getting waypoints');
-		sextant.getpextant();
+		sextant.getpextant.connect();
+		sextant.getpextant.requestData();
 	}
 </script>
 </body>
