@@ -63,6 +63,7 @@ messages = messenger.addChannel({
 });
 
 socket.on('connect', function(){
+	document.getElementById('header').style.backgroundColor = 'green';
 	console.log('connected');
 	messenger.socketLoaded = true;
 	console.log(messenger.channels);
@@ -71,6 +72,7 @@ socket.on('connect', function(){
 }.bind(this));
 
 socket.on('disconnect', function(){
+    document.getElementById('header').style.backgroundColor = 'transparent';
 	console.log('disconnect');
 });
 
