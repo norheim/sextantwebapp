@@ -11,12 +11,12 @@ var app = express();
   var compiler = webpack(webpackConfig);
 
   // Step 2: Attach the dev middleware to the compiler & the server
-  app.use(require("webpack-dev-middleware")(compiler, {
+  app.use(webpackDevMiddleware(compiler, {
     noInfo: true, publicPath: webpackConfig.output.publicPath
   }));
 
   // Step 3: Attach the hot middleware to the compiler & the server
-  app.use(require("webpack-hot-middleware")(compiler, {
+  app.use(webpackHotMiddleware (compiler, {
     log: console.log, path: '/__webpack_hmr', heartbeat: 10 * 1000
   }));
 })();
@@ -46,4 +46,4 @@ app.get('/Widget', function (req, res) {
 
 app.listen(3001, function () {
   console.log('Example app listening on port 3001');
-})
+});
