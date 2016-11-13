@@ -82,12 +82,14 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
 
     // returns positions projected on the terrain in Cartesian3, required for entity creation
     this.getRaisedPositions = function (latLongCoords) {
+        //console.log(latLongCoords);
         return new Promise(function(resolve, reject) {
-            cartographicArray = [];
+            var cartographicArray = [];
             for (i in latLongCoords['latitude']) {
                 cartographicPoint = Cartographic.fromDegrees(latLongCoords['longitude'][i], latLongCoords['latitude'][i]);
                 cartographicArray.push(cartographicPoint);
             }
+            //console.log(cartographicArray);
             self = this;
             var ellipsoid = this.viewer.scene.globe.ellipsoid;
             sampleTerrain(this.viewer.terrainProvider, 15, cartographicArray)
@@ -95,6 +97,8 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
                     raisedPositionsCartograhpic.forEach(function (coord, i) {
                         raisedPositionsCartograhpic[i].height *= self.terrainExaggeration;
                     });
+                    var inter = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic);
+                    //console.log(inter[0]);
                     resolve(ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic));
                 });
         }.bind(this));

@@ -47,40 +47,45 @@ function zoom(){
 	});
 }
 
+function heading(headingAngle) {
+    console.log(headingAngle);
+    camera.setView({
+        destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
+        orientation : {
+            heading : CesiumMath.toRadians(45.0),
+            pitch : -CesiumMath.toRadians(90),
+            roll : 0.0
+        }
+    })
+}
 function DynamicLines(){
 	this.points = [];
 	this.pointcounter = 0;
 	this.entity = Object();
 
-	this.toCartesian = function(){
-		//console.log(this.pointcounter);
-		/*cartographicArray = Cartographic.fromDegreesArray(this.points);
-		sampleTerrain(viewer.terrainProvider, 15, cartographicArray)
-			.then(function (raisedPositionsCartograhpic) {
-				console.log('made it here');
-				raisedPositionsCartograhpic.forEach(function (coord, i) {
-					raisedPositionsCartograhpic[i].height *= viewerWrapper.terrainExaggeration;
-				});
-				console.log(raisedPositionsCartograhpic[0].height);
-				var raisedPositionsOut = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic);
-				return raisedPositionsOut;
-			});*/
-		return Cartesian3.fromDegreesArray(this.points);
-	};
+    this.getPoints = function(){
+        return this.points;
+    };
+
+    this.pushPoint = function(lat, lon){
+        console.log(lat.toString()+','+lon.toString());
+        viewerWrapper.getRaisedPositions({latitude: [lat], longitude: [lon]}).then(function(raisedMidPoints){
+            this.points.push(raisedMidPoints[0]);
+        }.bind(this));
+    };
 
 	this.addPoint = function(lat, lon){
+        console.log('adding point');
 		this.pointcounter+=1;
-
-		if(this.pointcounter < 2) {
-			this.points.push(lon, lat);
-		}else if(this.pointcounter == 2){
+        this.pushPoint(lat, lon);
+		if(this.pointcounter == 2) {
 			console.log(this.points);
 			this.entity = viewer.entities.add({
 			    name : 'GPS coordinates',
 			    polyline : {
-			        positions : new CallbackProperty(this.toCartesian.bind(this), false),
+			        positions : new CallbackProperty(this.getPoints.bind(this), false),
 			        width : 2,
-			        material : Color.RED
+			        material : Color.GREEN
 			    }
 			});
 			this.zoomTo()
@@ -89,11 +94,10 @@ function DynamicLines(){
 			console.log(lascoords[0]==lon);
 			console.log(lascoords[1]==lat);
 			if(lascoords[0]!=lon) {
-				this.points.push(lon, lat);
+				this.pushPoint(lon, lat);
 				this.zoomTo()
 			}
 		}
-
 	};
 
 	this.zoomTo = function(){
@@ -130,19 +134,25 @@ serial = messenger.addChannel({
 	}
 });
 
-gpstrack = messenger.addChannel({
-	name: 'gpstrack',
-	initial: function (data) {
-		return data
-	},
-	onrecieve: function(data){
-		console.log('got gps data');
-		console.log(data);
-		getLocation(data);
-	}
+gpstracksilencer = messenger.addChannel({
+    name: 'gpstracksilencer',
+    send: function(data){
+        return data
+    }
 });
 
-var ellipsoid = viewer.scene.globe.ellipsoid;
+gpstrack = messenger.addChannel({
+    name: 'gpstrack',
+    initial: function (data) {
+        return data
+    },
+    onrecieve: function(data){
+        console.log('got gps data');
+        console.log(data);
+        getLocation(data);
+    }
+});
+
 waypointrequest = messenger.addChannel({
 	name: 'waypoints',
 	onrecieve: function (data) {
@@ -165,6 +175,9 @@ console.log(messenger);
 
 getpextant = messenger.addChannel({
 	name:'pextant',
+    send: function(data) {
+        return data
+    },
 	onrecieve: function (data) {
         console.log(data);
         midPoints = JSON.parse(data);
@@ -184,13 +197,14 @@ getpextant = messenger.addChannel({
 
 
 module.exports = {
-  start: gpstrack,
-  //stop: stop,
-  zoom: zoom,
-  //zoomtotracks: zoomtotracks,
-  serialrequest: serial,
-  getwaypoints: waypointrequest,
-  getpextant: getpextant
+    start: gpstrack,
+    stop: gpstracksilencer,
+    zoom: zoom,
+    heading: heading,
+    zoomtotracks: zoomtotracks,
+    serialrequest: serial,
+    getwaypoints: waypointrequest,
+    getpextant: getpextant
 };
 
 if (module.hot) {
