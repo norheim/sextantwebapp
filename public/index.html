@@ -55,6 +55,11 @@
 
 <script src="/build/bundle.js"></script>
 <script>
+	window.addEventListener("devicemotion", handleMotion, true);
+	function handleMotion(event){
+		sextant.heading(event.alpha);
+	}
+
 	function stop(){
 		gpstracksilencer.connect();
 		gpstracksilencer.send('stop');

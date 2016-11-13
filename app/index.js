@@ -52,7 +52,7 @@ function heading(headingAngle) {
     camera.setView({
         destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
         orientation : {
-            heading : CesiumMath.toRadians(45.0),
+            heading : CesiumMath.toRadians(headingAngle),
             pitch : -CesiumMath.toRadians(90),
             roll : 0.0
         }
@@ -88,14 +88,14 @@ function DynamicLines(){
 			        material : Color.GREEN
 			    }
 			});
-			this.zoomTo()
+			//this.zoomTo()
 		}else if(this.pointcounter > 2){
 			lascoords = _.takeRight(this.points,2);
 			console.log(lascoords[0]==lon);
 			console.log(lascoords[1]==lat);
 			if(lascoords[0]!=lon) {
 				this.pushPoint(lon, lat);
-				this.zoomTo()
+				//this.zoomTo()
 			}
 		}
 	};
