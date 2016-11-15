@@ -1,6 +1,7 @@
 _ = require('lodash');
 require('bootstrap-loader');
 messenger = require('./socket.js');
+require('./heatmap.js');
 cesiumlib= require('./cesiumlib');
 
 ViewerWrapper = cesiumlib.viewerwrapper;

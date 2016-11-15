@@ -19,6 +19,7 @@
     "express": "^4.14.0",
     "geolocation": "^0.2.0",
     "http": "0.0.0",
+    "ify-loader": "^1.0.3",
     "jquery": "^3.1.1",
     "lodash": "^4.16.6",
     "plotly": "^1.0.6",
