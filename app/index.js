@@ -1,7 +1,10 @@
 _ = require('lodash');
 require('bootstrap-loader');
 messenger = require('./socket.js');
-ViewerWrapper = require('./cesiumlib');
+cesiumlib= require('./cesiumlib');
+
+ViewerWrapper = cesiumlib.viewerwrapper;
+
 
 var EllipsoidTerrainProvider = require('cesium/Source/Core/EllipsoidTerrainProvider');
 var Cartesian3 = require('cesium/Source/Core/Cartesian3');
@@ -157,6 +160,9 @@ gpstrack = messenger.addChannel({
 
 waypointrequest = messenger.addChannel({
 	name: 'waypoints',
+	send: function(data){
+		return data
+	},
 	onrecieve: function (data) {
         console.log(data);
         midPoints = JSON.parse(data);
@@ -197,7 +203,9 @@ getpextant = messenger.addChannel({
     }
 });
 
-
+function getglobalpoint(){
+	return viewerWrapper.globalpoint;
+}
 module.exports = {
     start: gpstrack,
     stop: gpstracksilencer,
@@ -206,7 +214,8 @@ module.exports = {
     zoomtotracks: zoomtotracks,
     serialrequest: serial,
     getwaypoints: waypointrequest,
-    getpextant: getpextant
+    getpextant: getpextant,
+    globalpoint: getglobalpoint
 };
 
 if (module.hot) {

@@ -17,6 +17,7 @@ var ScreenSpaceEventType = require('cesium/Source/Core/ScreenSpaceEventType');
 var createTileMapServiceImageryProvider = require('cesium/Source/Scene/createTileMapServiceImageryProvider');
 var CesiumTerrainProvider = require('cesium/Source/Core/CesiumTerrainProvider');
 var CallbackProperty = require('cesium/Source/DataSources/CallbackProperty');
+var globalPoint;
 
 function ViewerWrapper(host, port, terrainExaggeration, container){
     this.container = container;
@@ -26,6 +27,7 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
     this.layerList = {};
     this.terrainList = {};
     this.terrainExaggeration = terrainExaggeration;
+    this.globalpoint = null;
 
     this.serveraddress = function(port){
         return this.host + ':' + port;
@@ -70,14 +72,19 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
                 var cartographic = Cartographic.fromCartesian(cartesian);
                 var longitudeString = CesiumMath.toDegrees(cartographic.longitude).toFixed(4);
                 var latitudeString = CesiumMath.toDegrees(cartographic.latitude).toFixed(4);
+                this.globalpoint = {
+                    "latitude":CesiumMath.toDegrees(cartographic.latitude),
+                    "longitude":CesiumMath.toDegrees(cartographic.longitude)
+                };
+
                 var carto_WGS84 = Ellipsoid.WGS84.cartesianToCartographic(cartesian);
                 var heightString = carto_WGS84.height.toFixed(4)/self.terrainExaggeration;
 
                 entity.position = cartesian;
                 entity.label.show = true;
                 entity.label.text = '(' + longitudeString + ', ' + latitudeString + ', ' + heightString + ')';
-            }
-        }, ScreenSpaceEventType.MOUSE_MOVE);
+            };
+        }.bind(this), ScreenSpaceEventType.MOUSE_MOVE);
     };
 
     // returns positions projected on the terrain in Cartesian3, required for entity creation
@@ -145,4 +152,7 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
     this.initialize();
 }
 
-module.exports = ViewerWrapper;
+module.exports = {
+    viewerwrapper:ViewerWrapper,
+    globalpoint:globalPoint
+}

@@ -25,7 +25,7 @@
 				  <option>Time</option>
 				</select>
 			</div>
-			<button type="button" class="btn btn-default" onclick="getpextantFromHere()">Pextant from here</button>
+			<button type="button" class="btn btn-default" onclick="drawpextant()">Pextant draw</button>
 		</form>
     </div>
     <button class="btn btn-default" type="button" onclick="start()">Start GPS</button>
@@ -43,6 +43,7 @@
 	    />
 		<div id="serialports"></div>
 	</div>
+	<div><div id="globalpoint"></div><button class="btn btn-default" type="button" onclick="getpextantFromHere()">Get current point</button></div>
 	Coordinates
     <div id="coords">
 
@@ -89,6 +90,9 @@
 		sextant.getwaypoints.connect();
 		sextant.getwaypoints.requestData();
 	}
+	function drawpextant(){
+		sextant.getwaypoints.send("bla")
+	}
 	function getpextant(){
 		console.log('getting waypoints');
 		sextant.getpextant.connect();
@@ -96,8 +100,12 @@
 	}
 	function getpextantFromHere(){
 		console.log('pextant from here');
+		console.log(sextant.globalpoint());
+
+		document.getElementById("globalpoint").innerHTML =JSON.stringify(sextant.globalpoint());
+
 		sextant.getpextant.connect();
-		sextant.getpextant.send('gps');
+		sextant.getpextant.send(JSON.stringify(sextant.globalpoint()));
 	}
 </script>
 </body>
