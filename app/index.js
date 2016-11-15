@@ -63,6 +63,17 @@ function heading(headingAngle) {
         })
     }
 }
+
+gpsmesh = messenger.addChannel({
+    name: 'gpsmesh',
+    send: function(data){
+        return data
+    },
+    onrecieve: function(data){
+        gps_tracks.addMesh()
+    }
+});
+
 function DynamicLines(){
 	this.points = [];
 	this.pointcounter = 0;
@@ -77,6 +88,9 @@ function DynamicLines(){
         viewerWrapper.getRaisedPositions({latitude: [lat], longitude: [lon]}).then(function(raisedMidPoints){
             this.points.push(raisedMidPoints[0]);
         }.bind(this));
+    };
+    this.addMesh = function(){
+        gps_mesh.send('')
     };
 
 	this.addPoint = function(lat, lon){

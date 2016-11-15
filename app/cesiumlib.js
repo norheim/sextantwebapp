@@ -11,6 +11,7 @@ var CesiumMath = require('cesium/Source/Core/Math');
 var Cartographic = require('cesium/Source/Core/Cartographic');
 var Ellipsoid = require('cesium/Source/Core/Ellipsoid');
 var Color = require('cesium/Source/Core/Color');
+var Rectangle = require('cesium/Source/Core/Rectangle');
 var sampleTerrain = require('cesium/Source/Core/sampleTerrain');
 var ScreenSpaceEventHandler = require('cesium/Source/Core/ScreenSpaceEventHandler');
 var ScreenSpaceEventType = require('cesium/Source/Core/ScreenSpaceEventType');
@@ -52,6 +53,27 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
         });
         this.terrainList[folder_location] = new_terrain_provider;
         this.viewer.scene.terrainProvider = new_terrain_provider;
+    };
+    this.addMesh = function(upperLeft, lowerRight){
+        lon_west = upperLeft.longitude;
+        lon_east = lowerRight.longitude;
+        lon_spacing = 20;
+        lonstep = (lon_east-lon_west)/lon_spacing;
+        lat_north = upperLeft.latitude;
+        lat_south = lowerRight.latitude;
+        lat_spacing = 20;
+        latstep = (lat_north-lat_south)/lat_spacing;
+
+        for (var lon = lon_west; lon < lon_east; lon += lonstep) {
+            for (var lat = lat_south; lat < lat_north; lat += latstep) {
+                viewer.entities.add({
+                    rectangle : {
+                        coordinates : Rectangle.fromDegrees(lon, lat, lon + lonstep, lat + latstep),
+                        material : Color.fromRandom({alpha : 0.5})
+                    }
+                });
+            }
+        }
     };
 
     this.addLatLongHover = function(){
