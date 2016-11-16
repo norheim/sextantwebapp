@@ -1,7 +1,7 @@
 _ = require('lodash');
 require('bootstrap-loader');
 messenger = require('./socket.js');
-require('./heatmap.js');
+//require('./heatmap.js');
 cesiumlib= require('./cesiumlib');
 
 ViewerWrapper = cesiumlib.viewerwrapper;
@@ -141,7 +141,7 @@ function getLocation(data){
 				coords.latitude.toString() +'</br>';
 				coordsContainer.innerHTML = wrappedCoords+coordsContainer.innerHTML;
 				gps_tracks.addPoint(coords.latitude, coords.longitude);
-				//console.log(coords.longitude, coords.latitude);
+                //console.log(coords.longitude, coords.latitude);
 			}
 	}
 }
@@ -160,6 +160,19 @@ gpstracksilencer = messenger.addChannel({
         return data
     }
 });
+
+
+gpsmesh = messenger.addChannel({
+    name: 'gpsmesh',
+    onrecieve: function(data){
+        console.log('got mesh data');
+        //console.log(data);
+        //viewerWrapper.addMesh(data['upper_left'], data['lower_right'], data['dem']);
+        //console.log(data);
+    }
+});
+
+gpsmesh.connect();
 
 gpstrack = messenger.addChannel({
     name: 'gpstrack',
@@ -218,6 +231,13 @@ getpextant = messenger.addChannel({
     }
 });
 
+calibrate = messenger.addChannel({
+    name: 'calibrate',
+    send: function (data) {
+        return data
+    }
+});
+
 function getglobalpoint(){
 	return viewerWrapper.globalpoint;
 }
@@ -230,7 +250,8 @@ module.exports = {
     serialrequest: serial,
     getwaypoints: waypointrequest,
     getpextant: getpextant,
-    globalpoint: getglobalpoint
+    globalpoint: getglobalpoint,
+    calibrate: calibrate
 };
 
 if (module.hot) {

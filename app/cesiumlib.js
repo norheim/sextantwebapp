@@ -11,11 +11,16 @@ var CesiumMath = require('cesium/Source/Core/Math');
 var Cartographic = require('cesium/Source/Core/Cartographic');
 var Ellipsoid = require('cesium/Source/Core/Ellipsoid');
 var Color = require('cesium/Source/Core/Color');
+var ColorGeometryInstanceAttribute = require('cesium/Source/Core/ColorGeometryInstanceAttribute');
+var GeometryInstance = require('cesium/Source/Core/GeometryInstance');
 var Rectangle = require('cesium/Source/Core/Rectangle');
+var RectangleGeometry = require('cesium/Source/Core/RectangleGeometry');
+var EntityCollection = require('cesium/Source/DataSources/EntityCollection');
 var sampleTerrain = require('cesium/Source/Core/sampleTerrain');
 var ScreenSpaceEventHandler = require('cesium/Source/Core/ScreenSpaceEventHandler');
 var ScreenSpaceEventType = require('cesium/Source/Core/ScreenSpaceEventType');
 var createTileMapServiceImageryProvider = require('cesium/Source/Scene/createTileMapServiceImageryProvider');
+var GroundPrimitive = require('cesium/Source/Scene/GroundPrimitive');
 var CesiumTerrainProvider = require('cesium/Source/Core/CesiumTerrainProvider');
 var CallbackProperty = require('cesium/Source/DataSources/CallbackProperty');
 var globalPoint;
@@ -29,6 +34,9 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
     this.terrainList = {};
     this.terrainExaggeration = terrainExaggeration;
     this.globalpoint = null;
+    this.mesh_upper_left = null;
+    this.mesh_entities = [];
+    this.mesh_rowcol = [];
 
     this.serveraddress = function(port){
         return this.host + ':' + port;
@@ -54,25 +62,64 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
         this.terrainList[folder_location] = new_terrain_provider;
         this.viewer.scene.terrainProvider = new_terrain_provider;
     };
-    this.addMesh = function(upperLeft, lowerRight){
-        lon_west = upperLeft.longitude;
-        lon_east = lowerRight.longitude;
-        lon_spacing = 20;
-        lonstep = (lon_east-lon_west)/lon_spacing;
-        lat_north = upperLeft.latitude;
-        lat_south = lowerRight.latitude;
-        lat_spacing = 20;
-        latstep = (lat_north-lat_south)/lat_spacing;
+    this.addMesh = function(upperLeft, lowerRight, dem){
+        console.log('draping mesh');
+        console.log(dem[0]);
+        if (upperLeft != this.mesh_upper_left) {
+            this.mesh_upper_left = upperLeft;
 
-        for (var lon = lon_west; lon < lon_east; lon += lonstep) {
-            for (var lat = lat_south; lat < lat_north; lat += latstep) {
-                viewer.entities.add({
-                    rectangle : {
-                        coordinates : Rectangle.fromDegrees(lon, lat, lon + lonstep, lat + latstep),
-                        material : Color.fromRandom({alpha : 0.5})
+            var lon_west = upperLeft.longitude;
+            var lon_east = lowerRight.longitude;
+            var lon_spacing = dem[0].length;
+            var lonstep = (lon_east - lon_west) / lon_spacing;
+            var lat_north = upperLeft.latitude;
+            var lat_south = lowerRight.latitude;
+            var lat_spacing = dem.length;
+            var latstep = (lat_north - lat_south) / lat_spacing;
+
+            var ul_col = upperLeft.col;
+            var ul_row = upperLeft.row;
+            var lr_col = lowerRight.col;
+            var lr_row = lowerRight.row;
+            console.log(ul_col);
+            console.log(lr_row);
+            //var scene = this.viewer.scene;
+            // Remove all "old" entities
+            console.log('made it until the loop');
+            var col = ul_col-1;
+            var i = -1;
+            for (var lon = lon_west; lon < lon_east; lon += lonstep) {
+                i++;
+                col+=1;
+                var row = lr_row+1;
+                var j = lat_spacing+1;
+                //console.log(lon);
+                for (var lat = lat_south; lat < lat_north; lat += latstep) {
+                    j-=1;
+                    row -=1;
+                    var hackyhash = row.toString()+col.toString();
+                    if(!this.mesh_rowcol.includes(hackyhash)) {
+                        console.log(dem[j][i]);
+                        var entity = this.viewer.entities.add({
+                            rectangle: {
+                                coordinates: Rectangle.fromDegrees(lon, lat, lon + lonstep, lat + latstep),
+                                material: Color.fromRandom({alpha: 0.5})
+                            }
+                        });
+                        this.mesh_entities.push(entity);
+                        if(this.mesh_entities.length > 1000){
+                            while(this.mesh_entities.length > 1000){
+                                this.viewer.entities.remove(this.mesh_entities.shift());
+                            }
+                        }
+                        this.mesh_rowcol.push(hackyhash);
+                    }else{
+                        console.log('already included');
                     }
-                });
+                }
             }
+            //this.viewer.zoomTo(entity);
+            //console.log('done with loop');
         }
     };
 
@@ -98,14 +145,13 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
                     "latitude":CesiumMath.toDegrees(cartographic.latitude),
                     "longitude":CesiumMath.toDegrees(cartographic.longitude)
                 };
-
                 var carto_WGS84 = Ellipsoid.WGS84.cartesianToCartographic(cartesian);
                 var heightString = carto_WGS84.height.toFixed(4)/self.terrainExaggeration;
 
                 entity.position = cartesian;
                 entity.label.show = true;
                 entity.label.text = '(' + longitudeString + ', ' + latitudeString + ', ' + heightString + ')';
-            };
+            }
         }.bind(this), ScreenSpaceEventType.MOUSE_MOVE);
     };
 
@@ -164,6 +210,13 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
                 self.addLatLongHover();
             }
         });
+
+        handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
+
+        handler.setInputAction(function(movement) {
+            document.getElementById('hovercoord').innerHTML = this.globalpoint['latitude'].toString() + "</br>" +
+                this.globalpoint['longitude'].toString();
+        }.bind(this), ScreenSpaceEventType.LEFT_DOWN);
 
         this.viewer = viewer;
         this.scene = viewer.scene;

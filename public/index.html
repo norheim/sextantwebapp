@@ -11,7 +11,7 @@
 <div class="row body">
   <div class="col-md-9 cell" id="cesiumContainer"></div>
   <div class="col-md-3 cell">
-  	<h1 id="header">SEXTANT<smalle>view</small></h1>
+  	<h1 id="header">SEXTANT<small>view</small></h1>
   	<div id="app">
 	    <form class="form-inline">
 		    <div class="form-group">
@@ -52,7 +52,8 @@
 		<div id="serialports"></div>
 	</div>
 	<div><div id="globalpoint"></div><button class="btn btn-default" type="button" onclick="getpextantFromHere()">Get current point</button></div>
-	<div id="plotlyMesh"></div>
+	  <button type="button" class="btn btn-default" onclick="calibrate()">Calibrate</button>
+	  <div id="hovercoord"></div>
 	  Coordinates
     <div id="coords">
 
@@ -69,6 +70,9 @@
 		sextant.heading(event.alpha);
 	}, true);*/
 
+	/* Current Plotly.js version */
+	//console.log( Plotly.BUILD );
+	//sextant.plotly.setReference(Plotly);
 
 	function stop(){
 		gpstracksilencer.connect();
@@ -116,6 +120,17 @@
 		sextant.getpextant.connect();
 		sextant.getpextant.send(JSON.stringify(sextant.globalpoint()));
 	}
+
+	function calibrate(){
+		console.log('pextant from here');
+		console.log(sextant.globalpoint());
+
+		document.getElementById("globalpoint").innerHTML =JSON.stringify(sextant.globalpoint());
+
+		sextant.calibrate.connect();
+		sextant.calibrate.send(JSON.stringify(sextant.globalpoint()));
+	}
+
 </script>
 </body>
 </html>
