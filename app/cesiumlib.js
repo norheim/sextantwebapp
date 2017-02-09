@@ -205,8 +205,8 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
             destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
             duration: 3,
             complete: function(){
-                self.addTerrain('9090', 'tilesets/HI_highqual');
-                self.addImagery('3001', 'CustomMaps/MU_Pan_Sharp_contrast');
+                self.addTerrain('3001', 'tilesets/HI_highqual');
+                self.addImagery('3001', 'CustomMaps/HI_lowqual_relief');
                 self.addLatLongHover();
             }
         });
