@@ -1,106 +1,189 @@
-require('cesium/Source/Widgets/widgets.css');
-require('./style.css');
-var BuildModuleUrl = require('cesium/Source/Core/buildModuleUrl');
-BuildModuleUrl.setBaseUrl('./');
+import 'cesium/Source/Widgets/widgets.css';
+import './style.css';
+import {setBaseUrl} from 'cesium/Source/Core/buildModuleUrl';
+setBaseUrl('./');
 
 // Load all cesium components required
-var Viewer = require('cesium/Source/Widgets/Viewer/Viewer');
-var EllipsoidTerrainProvider = require('cesium/Source/Core/EllipsoidTerrainProvider');
-var Cartesian3 = require('cesium/Source/Core/Cartesian3');
-var CesiumMath = require('cesium/Source/Core/Math');
-var Cartographic = require('cesium/Source/Core/Cartographic');
-var Ellipsoid = require('cesium/Source/Core/Ellipsoid');
-var Color = require('cesium/Source/Core/Color');
-var ColorGeometryInstanceAttribute = require('cesium/Source/Core/ColorGeometryInstanceAttribute');
-var GeometryInstance = require('cesium/Source/Core/GeometryInstance');
-var Rectangle = require('cesium/Source/Core/Rectangle');
-var RectangleGeometry = require('cesium/Source/Core/RectangleGeometry');
-var EntityCollection = require('cesium/Source/DataSources/EntityCollection');
-var sampleTerrain = require('cesium/Source/Core/sampleTerrain');
-var ScreenSpaceEventHandler = require('cesium/Source/Core/ScreenSpaceEventHandler');
-var ScreenSpaceEventType = require('cesium/Source/Core/ScreenSpaceEventType');
-var createTileMapServiceImageryProvider = require('cesium/Source/Scene/createTileMapServiceImageryProvider');
-var GroundPrimitive = require('cesium/Source/Scene/GroundPrimitive');
-var CesiumTerrainProvider = require('cesium/Source/Core/CesiumTerrainProvider');
-var CallbackProperty = require('cesium/Source/DataSources/CallbackProperty');
-var globalPoint;
+import Viewer from 'cesium/Source/Widgets/Viewer/Viewer';
+import EllipsoidTerrainProvider from 'cesium/Source/Core/EllipsoidTerrainProvider';
+import Cartesian3 from 'cesium/Source/Core/Cartesian3';
+import CesiumMath from 'cesium/Source/Core/Math';
+import Cartographic from 'cesium/Source/Core/Cartographic';
+import Ellipsoid from 'cesium/Source/Core/Ellipsoid';
+import Color from 'cesium/Source/Core/Color';
+import Transforms from 'cesium/Source/Core/Transforms';
+import PointPrimitiveCollection from 'cesium/Source/Scene/PointPrimitiveCollection';
+import sampleTerrain from 'cesium/Source/Core/sampleTerrain';
+import ScreenSpaceEventHandler from 'cesium/Source/Core/ScreenSpaceEventHandler';
+import ScreenSpaceEventType from 'cesium/Source/Core/ScreenSpaceEventType';
+import CallbackProperty from 'cesium/Source/DataSources/CallbackProperty';
+import ColorGeometryInstanceAttribute from 'cesium/Source/Core/ColorGeometryInstanceAttribute';
+import GeometryInstance from 'cesium/Source/Core/GeometryInstance';
+import Rectangle from 'cesium/Source/Core/Rectangle';
+import RectangleGeometry from 'cesium/Source/Core/RectangleGeometry';
+import EntityCollection from 'cesium/Source/DataSources/EntityCollection';
+import CreateTileMapServiceImageryProvider from 'cesium/Source/Scene/createTileMapServiceImageryProvider';
+import GroundPrimitive from 'cesium/Source/Scene/GroundPrimitive';
+import CesiumTerrainProvider from 'cesium/Source/Core/CesiumTerrainProvider';
 
-function ViewerWrapper(host, port, terrainExaggeration, container){
-    this.container = container;
-    this.host = host;
-    this.port = port;
-    this.layers = null;
-    this.layerList = {};
-    this.terrainList = {};
-    this.terrainExaggeration = terrainExaggeration;
-    this.globalpoint = null;
-    this.mesh_upper_left = null;
-    this.mesh_entities = [];
-    this.mesh_rowcol = [];
+class ViewerWrapper{
+    constructor(host, port, terrainExaggeration, container) {
+        this.container = container;
+        this.host = host;
+        this.port = port;
+        this.layerList = {};
+        this.terrainList = {};
+        this.terrainExaggeration = terrainExaggeration;
+        this.globalpoint = null;
+        this.mesh_upper_left = null;
+        this.mesh_entities = [];
+        this.mesh_rowcol = [];
 
-    this.serveraddress = function(port){
+        // Set simple geometry for the full planet
+        const terrainProvider = new EllipsoidTerrainProvider();
+        this.terrainList['default'] = terrainProvider;
+
+        // Basic texture for the full planet
+        this.layerList['default'] = 'Assets/Textures/NaturalEarthII';
+        const imageryProvider = CreateTileMapServiceImageryProvider({
+            url : this.serveraddress(this.port) + '/' + this.layerList['default'],
+            fileExtension : 'jpg'
+        });
+
+        const viewer = new Viewer(this.container, {
+            timeline : false,
+            creditContainer : 'credits',
+            terrainExaggeration : terrainExaggeration,
+            baseLayerPicker : false,
+            terrainProvider : terrainProvider,
+            imageryProvider : imageryProvider
+
+        });
+        self = this;
+        const hawaii = viewer.scene.camera.flyTo({
+            destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
+            duration: 3,
+            complete: function(){
+                self.addTerrain('3001', 'tilesets/HI_air_imagery');
+                self.addImagery('3001', 'CustomMaps/MU_Pan_Sharp_contrast');
+                //self.addImagery('3001', 'CustomMaps/HI_air_imagery_relief_100');
+                self.addLatLongHover();
+            }
+        });
+
+        const handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function(movement) {
+            document.getElementById('hovercoord').innerHTML = this.globalpoint['latitude'].toString() + "</br>" +
+                this.globalpoint['longitude'].toString();
+        }.bind(this), ScreenSpaceEventType.LEFT_DOWN);
+
+        this.viewer = viewer;
+        this.scene = viewer.scene;
+        this.camera = viewer.scene.camera;
+        this.layers = viewer.scene.imageryLayers;
+    }
+
+    serveraddress(port){
         return this.host + ':' + port;
     };
 
-    this.addImagery = function(port, folder_location){
-        if(typeof port === "undefined") {
-            port=this.port;
-        }
-        new_layer = this.layers.addImageryProvider(new createTileMapServiceImageryProvider({
-            url : this.serveraddress(port) + '/' + folder_location
-        }));
-        this.layerList[folder_location] = new_layer;
+    addGeoPoint(vizsocket){
+        const viewer = this.viewer;
+        const entity = viewer.entities.add({
+            label : {
+                show : false
+            }
+        });
+
+        const scene = viewer.scene;
+        const handler = new ScreenSpaceEventHandler(scene.canvas);
+        const self = this;
+        handler.setInputAction(function(movement) {
+            const ray = viewer.camera.getPickRay(movement.endPosition);
+            const cartesian= viewer.scene.globe.pick(ray, viewer.scene);
+            if (cartesian) {
+                const cartographic = Cartographic.fromCartesian(cartesian);
+                const longitudeString = CesiumMath.toDegrees(cartographic.longitude).toFixed(4);
+                const latitudeString = CesiumMath.toDegrees(cartographic.latitude).toFixed(4);
+                const carto_WGS84 = Ellipsoid.WGS84.cartesianToCartographic(cartesian);
+                const heightString = carto_WGS84.height.toFixed(4)/self.terrainExaggeration;
+
+                entity.position = cartesian;
+                entity.label.show = true;
+                entity.label.text = '(' + longitudeString + ', ' + latitudeString + ', ' + heightString + ')';
+
+                const object = {
+                    "name": 'GeoPoint',
+                    "arguments": {
+                        "type": 'LAT_LONG',
+                        "latitude": CesiumMath.toDegrees(cartographic.latitude),
+                        "longitude": CesiumMath.toDegrees(cartographic.longitude)
+                    }
+                };
+
+                vizsocket.add(object);
+            }
+        }.bind(this), ScreenSpaceEventType.MOUSE_MOVE);
     };
 
-    this.addTerrain = function(port, folder_location) {
+    addImagery(port, folder_location){
         if(typeof port === "undefined") {
             port = this.port;
         }
-        var new_terrain_provider = new CesiumTerrainProvider({
+        this.layerList[folder_location] = this.layers.addImageryProvider(new CreateTileMapServiceImageryProvider({
+            url : this.serveraddress(port) + '/' + folder_location
+        }));
+    };
+
+    addTerrain(port, folder_location) {
+        if(typeof port === "undefined") {
+            port = this.port;
+        }
+        const new_terrain_provider = new CesiumTerrainProvider({
             url : this.serveraddress(port) + '/' + folder_location
         });
         this.terrainList[folder_location] = new_terrain_provider;
         this.viewer.scene.terrainProvider = new_terrain_provider;
     };
-    this.addMesh = function(upperLeft, lowerRight, dem){
+
+    addRectangle(center, length){
+
+    };
+
+    addMesh(upperLeft, lowerRight, dem){
         console.log('draping mesh');
         console.log(dem[0]);
         if (upperLeft != this.mesh_upper_left) {
             this.mesh_upper_left = upperLeft;
 
-            var lon_west = upperLeft.longitude;
-            var lon_east = lowerRight.longitude;
-            var lon_spacing = dem[0].length;
-            var lonstep = (lon_east - lon_west) / lon_spacing;
-            var lat_north = upperLeft.latitude;
-            var lat_south = lowerRight.latitude;
-            var lat_spacing = dem.length;
-            var latstep = (lat_north - lat_south) / lat_spacing;
+            const [lon_west, lon_east] = [upperLeft.longitude, lowerRight.longitude];
+            const lon_spacing = dem[0].length;
+            const lonstep = (lon_east - lon_west) / lon_spacing;
+            const [lat_north, lat_south] = [upperLeft.latitude, lowerRight.latitude];
+            const lat_spacing = dem.length;
+            const latstep = (lat_north - lat_south) / lat_spacing;
 
-            var ul_col = upperLeft.col;
-            var ul_row = upperLeft.row;
-            var lr_col = lowerRight.col;
-            var lr_row = lowerRight.row;
+            const [ul_col, ul_row, lr_col, lr_row] = [upperLeft.col, upperLeft.row, lowerRight.col, lowerRight.row];
             console.log(ul_col);
             console.log(lr_row);
-            //var scene = this.viewer.scene;
+
             // Remove all "old" entities
             console.log('made it until the loop');
-            var col = ul_col-1;
-            var i = -1;
-            for (var lon = lon_west; lon < lon_east; lon += lonstep) {
+            let col = ul_col-1;
+            let i = -1;
+            for (let lon = lon_west; lon < lon_east; lon += lonstep) {
                 i++;
                 col+=1;
-                var row = lr_row+1;
-                var j = lat_spacing+1;
+                let row = lr_row+1;
+                let j = lat_spacing+1;
                 //console.log(lon);
-                for (var lat = lat_south; lat < lat_north; lat += latstep) {
+                for (let lat = lat_south; lat < lat_north; lat += latstep) {
                     j-=1;
                     row -=1;
-                    var hackyhash = row.toString()+col.toString();
+                    let hackyhash = row.toString()+col.toString();
                     if(!this.mesh_rowcol.includes(hackyhash)) {
                         console.log(dem[j][i]);
-                        var entity = this.viewer.entities.add({
+                        let entity = this.viewer.entities.add({
                             rectangle: {
                                 coordinates: Rectangle.fromDegrees(lon, lat, lon + lonstep, lat + latstep),
                                 material: Color.fromRandom({alpha: 0.5})
@@ -123,30 +206,30 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
         }
     };
 
-    this.addLatLongHover = function(){
-        var viewer = this.viewer;
-        var entity = viewer.entities.add({
+    addLatLongHover(){
+        const viewer = this.viewer;
+        const entity = viewer.entities.add({
             label : {
                 show : false
             }
         });
 
-        scene = viewer.scene;
-        handler = new ScreenSpaceEventHandler(scene.canvas);
+        const scene = viewer.scene;
+        const handler = new ScreenSpaceEventHandler(scene.canvas);
         self = this;
         handler.setInputAction(function(movement) {
-            var ray = viewer.camera.getPickRay(movement.endPosition);
-            var cartesian= viewer.scene.globe.pick(ray, viewer.scene);
+            const ray = viewer.camera.getPickRay(movement.endPosition);
+            const cartesian= viewer.scene.globe.pick(ray, viewer.scene);
             if (cartesian) {
-                var cartographic = Cartographic.fromCartesian(cartesian);
-                var longitudeString = CesiumMath.toDegrees(cartographic.longitude).toFixed(4);
-                var latitudeString = CesiumMath.toDegrees(cartographic.latitude).toFixed(4);
+                const cartographic = Cartographic.fromCartesian(cartesian);
+                const longitudeString = CesiumMath.toDegrees(cartographic.longitude).toFixed(4);
+                const latitudeString = CesiumMath.toDegrees(cartographic.latitude).toFixed(4);
                 this.globalpoint = {
                     "latitude":CesiumMath.toDegrees(cartographic.latitude),
                     "longitude":CesiumMath.toDegrees(cartographic.longitude)
                 };
-                var carto_WGS84 = Ellipsoid.WGS84.cartesianToCartographic(cartesian);
-                var heightString = carto_WGS84.height.toFixed(4)/self.terrainExaggeration;
+                const carto_WGS84 = Ellipsoid.WGS84.cartesianToCartographic(cartesian);
+                const heightString = carto_WGS84.height.toFixed(4)/self.terrainExaggeration;
 
                 entity.position = cartesian;
                 entity.label.show = true;
@@ -156,78 +239,28 @@ function ViewerWrapper(host, port, terrainExaggeration, container){
     };
 
     // returns positions projected on the terrain in Cartesian3, required for entity creation
-    this.getRaisedPositions = function (latLongCoords) {
+    getRaisedPositions(latLongCoords) {
         //console.log(latLongCoords);
         return new Promise(function(resolve, reject) {
-            var cartographicArray = [];
+            const cartographicArray = [];
             for (i in latLongCoords['latitude']) {
                 cartographicPoint = Cartographic.fromDegrees(latLongCoords['longitude'][i], latLongCoords['latitude'][i]);
                 cartographicArray.push(cartographicPoint);
             }
             //console.log(cartographicArray);
             self = this;
-            var ellipsoid = this.viewer.scene.globe.ellipsoid;
+            const ellipsoid = this.viewer.scene.globe.ellipsoid;
             sampleTerrain(this.viewer.terrainProvider, 15, cartographicArray)
                 .then(function (raisedPositionsCartograhpic) {
                     raisedPositionsCartograhpic.forEach(function (coord, i) {
                         raisedPositionsCartograhpic[i].height *= self.terrainExaggeration;
                     });
-                    var inter = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic);
+                    let inter = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic);
                     //console.log(inter[0]);
                     resolve(ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartograhpic));
                 });
         }.bind(this));
     };
-
-    this.initialize = function(){
-        // Set simple geometry for the full planet
-        var terrainProvider = new EllipsoidTerrainProvider();
-        this.terrainList['default'] = terrainProvider;
-
-        // Basic texture for the full planet
-        this.layerList['default'] = 'Assets/Textures/NaturalEarthII';
-        var imageryProvider = createTileMapServiceImageryProvider({
-            url : this.serveraddress(this.port) + '/' + this.layerList['default'],
-            fileExtension : 'jpg'
-        });
-
-        var viewer = new Viewer(this.container, {
-            timeline : false,
-            creditContainer : 'credits',
-            terrainExaggeration : terrainExaggeration,
-            baseLayerPicker : false,
-            terrainProvider : terrainProvider,
-            imageryProvider : imageryProvider
-
-        });
-        self = this;
-        hawaii = viewer.scene.camera.flyTo({
-            destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
-            duration: 3,
-            complete: function(){
-                self.addTerrain('3001', 'tilesets/HI_highqual');
-                self.addImagery('3001', 'CustomMaps/HI_lowqual_relief');
-                self.addLatLongHover();
-            }
-        });
-
-        handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
-
-        handler.setInputAction(function(movement) {
-            document.getElementById('hovercoord').innerHTML = this.globalpoint['latitude'].toString() + "</br>" +
-                this.globalpoint['longitude'].toString();
-        }.bind(this), ScreenSpaceEventType.LEFT_DOWN);
-
-        this.viewer = viewer;
-        this.scene = viewer.scene;
-        this.camera = viewer.scene.camera;
-        this.layers = viewer.scene.imageryLayers;
-    };
-
-    this.initialize();
 }
 
-module.exports = {
-    viewerwrapper:ViewerWrapper,
-    globalpoint:globalPoint
-}
+export {ViewerWrapper}
