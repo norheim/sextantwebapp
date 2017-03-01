@@ -1,16 +1,16 @@
-var express = require('express');
-var path = require('path');
-var terrainServer = require('./terrainserver');
-var webpackDevMiddleware = require("webpack-dev-middleware");
-var webpackHotMiddleware = require("webpack-hot-middleware");
-var app = express();
-var port = (process.env.PORT || 3001);
+const express = require('express');
+const path = require('path');
+const terrainServer = require('./terrainserver');
+const webpackDevMiddleware = require("webpack-dev-middleware");
+const webpackHotMiddleware = require("webpack-hot-middleware");
+let app = express();
+const port = (process.env.PORT || 3001);
 
 (function() {
   // Step 1: Create & configure a webpack compiler
-  var webpack = require('webpack');
-  var webpackConfig = require('./webpack.config');
-  var compiler = webpack(webpackConfig);
+  const webpack = require('webpack');
+  const webpackConfig = require('./webpack.config');
+  const compiler = webpack(webpackConfig);
 
   // Step 2: Attach the dev middleware to the compiler & the server
   app.use(webpackDevMiddleware(compiler, {
@@ -24,12 +24,15 @@ var port = (process.env.PORT || 3001);
 })();
 
 // Serve static files from the public folder
-var publicPath = path.resolve(__dirname, 'public');
+const publicPath = path.resolve(__dirname, 'public');
 app.use(express.static(publicPath));
+
+const cesiumPath = path.resolve(__dirname, 'node_modules', 'cesium', 'Build','Cesium');
+app.use(express.static(cesiumPath));
 
 // Host terrain tiles
 // TODO: move terrain folder in here?
-var terrainPath = 'C:\\Users\\johan\\Dropbox (MIT)\\BASALT\\pextant\\pextant\\maps\\terrain';
+const terrainPath = 'C:\\Users\\johan\\Dropbox (MIT)\\BASALT\\pextant\\pextant\\maps\\terrain';
 app = terrainServer(app, terrainPath);
 
 //require("!style!css!./style.css");

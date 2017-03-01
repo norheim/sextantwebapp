@@ -1,7 +1,7 @@
 /**
  * Created by johan on 2/9/2017.
  */
-var path = require('path');
+const path = require('path');
 
 function serveTerrain(app, terrainPath) {
     console.log(terrainPath);
@@ -12,10 +12,10 @@ function serveTerrain(app, terrainPath) {
     });
 
     app.get('/tilesets/:tileset/:z/:x/:y.terrain', function (req, res) {
-        var x = req.params.x;
-        var y = req.params.y;
-        var z = req.params.z;
-        var tileset = req.params.tileset;
+        const x = req.params.x;
+        const y = req.params.y;
+        const z = req.params.z;
+        const tileset = req.params.tileset;
         if (z == 0 &&
             x == 1 &&
             y == 0) {
@@ -23,7 +23,7 @@ function serveTerrain(app, terrainPath) {
             res.set('Content-Encoding', 'gzip');
             res.sendFile(path.resolve(__dirname, 'public', 'smallterrain-blank.terrain'));
         } else {
-            var localTerrain = path.resolve(terrainPath, tileset, z, x, y + '.terrain');
+            const localTerrain = path.resolve(terrainPath, tileset, z, x, y + '.terrain');
             console.log(localTerrain);
             res.setHeader('Content-Encoding', 'gzip');
             res.sendFile(localTerrain);
