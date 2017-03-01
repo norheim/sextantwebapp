@@ -25,6 +25,7 @@
     "plotly": "^1.0.6",
     "react": "^15.3.2",
     "react-dom": "^15.3.2",
+    "redux": "^3.6.0",
     "socket.io": "^1.5.1",
     "socket.io-client": "^1.5.1"
   },
