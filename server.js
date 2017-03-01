@@ -4,6 +4,7 @@ var terrainServer = require('./terrainserver');
 var webpackDevMiddleware = require("webpack-dev-middleware");
 var webpackHotMiddleware = require("webpack-hot-middleware");
 var app = express();
+var port = (process.env.PORT || 3001);
 
 (function() {
   // Step 1: Create & configure a webpack compiler
@@ -37,6 +38,6 @@ app.get('/Widget', function (req, res) {
  res.send('Hello world');
 });
 
-app.listen(3001, function () {
+app.listen(port, function () {
   console.log('Example app listening on port 3001');
 });

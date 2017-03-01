@@ -7,6 +7,7 @@ import 'bootstrap-loader';
 import {ViewerWrapper} from './cesiumlib';
 
 console.log('creating the wrapper');
-const viewerWrapper = new ViewerWrapper('http://localhost', 3001, 1, 'cesiumContainer');
+const port = (process.env.PORT || 3001);
+const viewerWrapper = new ViewerWrapper('http://localhost', port, 1, 'cesiumContainer');
 const viewer = viewerWrapper.viewer;
 const camera = viewer.scene.camera;

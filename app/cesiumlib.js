@@ -60,12 +60,14 @@ class ViewerWrapper{
 
         });
         self = this;
+        const idaho_destination = Cartesian3.fromDegrees(-113.5787682, 43.4633101, 5000);
+        const hawaii_destination = Cartesian3.fromDegrees(-155.2118, 19.3647, 5000);
         const hawaii = viewer.scene.camera.flyTo({
-            destination: Cartesian3.fromDegrees(-155.2118, 19.3647, 5000),
+            destination: idaho_destination,
             duration: 3,
             complete: function(){
-                self.addTerrain('3001', 'tilesets/HI_air_imagery');
-                self.addImagery('3001', 'CustomMaps/MU_Pan_Sharp_contrast');
+                self.addTerrain(self.port, 'tilesets/HW_flow_terrain');
+                self.addImagery(self.port, 'CustomMaps/HW_full_drone');
                 //self.addImagery('3001', 'CustomMaps/HI_air_imagery_relief_100');
                 self.addLatLongHover();
             }
