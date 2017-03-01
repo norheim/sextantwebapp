@@ -1,14 +1,52 @@
-var socket = require('socket.io-client')('http://localhost:2999');
+import io from 'socket.io-client';
 
-function ComsChannels(messenger, settings){
-	this.messenger = messenger;
-	this.channelname = settings.name;
-	this.settings = settings;
+const socket = io('http://localhost:2999');
 
-	this.connect = function(data){
-		if('initial' in settings){
-			initialMessage = settings.initial(data);
-			this.messenger.emit(initialMessage);
+class Messenger{
+    constructor(socket_ref) {
+        this.socketLoaded = false;
+        this.socket_ref = socket_ref;
+        this.channels = {};
+    }
+
+    emit(channel, jsonmsg){
+        if(this.socketLoaded){
+            console.log('socket emitting: ' + channel.toString());
+            this.socket_ref.emit(channel, jsonmsg, channel.callback);
+        }else{
+            console.log('socket not loaded yet');
+        }
+    };
+
+    addChannel(settings){
+        const comsChannel = new ComsChannels(this, settings);
+        this.channels[settings.name] = comsChannel;
+        return comsChannel;
+    }
+}
+
+class ComsChannelSettings{
+    constructor(settingDict){
+        this.name = settingDict.name;
+    }
+}
+
+class ComsChannels{
+    constructor(messenger, settings){
+        this.messenger = messenger;
+        this.settings = settings;
+        this.channelname = settings.name;
+        this.callback = function(error, message){
+            // this means the server got the call
+            console.log(error);
+            console.log(message);
+        };
+    }
+
+	connect(data = false){
+		if (data){
+			const initialJSONMessage = this.settings.onconnect(data);
+			this.messenger.emit(initialJSONMessage);
 		}
 		this.messenger.socket_ref.on(this.channelname, function(data){
 			console.log('Got a message from: '+this.channelname);
@@ -16,64 +54,37 @@ function ComsChannels(messenger, settings){
 		}.bind(this));
 	};
 
-	this.send = function(data){
+	send(JSONData){
 		console.log('Sending to: '+this.channelname);
-		sendData = this.settings.send(data);
-		this.messenger.emit(this.channelname,sendData);
+		this.messenger.emit(this.channelname, JSONData);
 	};
 
-	this.requestData = function(data){
+	requestData(data){
 		console.log('Requesting: '+this.channelname);
 		this.messenger.emit(this.channelname, '');
 	}
 }
 
-function Messenger(socket_ref){
-	this.socketLoaded = false;
-	this.socket_ref = socket_ref;
-	this.channels = {};
-
-	this.emit = function(channel, jsonmsg){
-		if(this.socketLoaded){
-			console.log('socket emitting: '+channel.toString());
-			this.socket_ref.emit(channel,jsonmsg);
-		}else{
-			console.log('socket not loaded yet');
-		}
-	};
-
-	this.addChannel= function(settings){
-		comsChannel = new ComsChannels(this, settings);
-		this.channels[settings.name] = comsChannel;
-		return comsChannel;
-	}
-
-}
-
-messenger = new Messenger(socket);
-
-messages = messenger.addChannel({
+let messenger = new Messenger(socket);
+const messageChannel = messenger.addChannel({
 	name: 'message',
-	send: function (data) {
-		return data;
-	},
 	onrecieve: function (data) {
 		console.log(data);
 	}
 });
+
+export default messenger;
 
 socket.on('connect', function(){
 	document.getElementById('header').style.backgroundColor = 'green';
 	console.log('connected');
 	messenger.socketLoaded = true;
 	console.log(messenger.channels);
-	messenger.channels['message'].connect();
-	messenger.channels['message'].send('getting you loud and clear');
+	messageChannel.connect();
+	messageChannel.send('getting you loud and clear');
 }.bind(this));
 
 socket.on('disconnect', function(){
     document.getElementById('header').style.backgroundColor = 'transparent';
-	console.log('disconnect');
+	console.log('disconnected');
 });
-
-module.exports = messenger;
