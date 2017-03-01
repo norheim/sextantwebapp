@@ -1,29 +1,25 @@
-_ = require('lodash');
-require('bootstrap-loader');
-messenger = require('./socket.js');
-//require('./heatmap.js');
-cesiumlib= require('./cesiumlib');
+import * as _ from 'lodash';
+import 'bootstrap-loader';
+import * as messenger from './socket.js';
+import {ViewerWrapper} from './cesiumlib';
 
-ViewerWrapper = cesiumlib.viewerwrapper;
+import * as EllipsoidTerrainProvider from 'cesium/Source/Core/EllipsoidTerrainProvider';
+import * as Cartesian3 from 'cesium/Source/Core/Cartesian3';
+import * as CesiumMath from 'cesium/Source/Core/Math';
+import * as Cartographic from 'cesium/Source/Core/Cartographic';
+import * as Ellipsoid from 'cesium/Source/Core/Ellipsoid';
+import * as Color from 'cesium/Source/Core/Color';
+import * as Transforms from 'cesium/Source/Core/Transforms';
+import * as PointPrimitiveCollection from 'cesium/Source/Scene/PointPrimitiveCollection';
+import * as sampleTerrain from 'cesium/Source/Core/sampleTerrain';
+import * as ScreenSpaceEventHandler from 'cesium/Source/Core/ScreenSpaceEventHandler';
+import * as ScreenSpaceEventType from 'cesium/Source/Core/ScreenSpaceEventType';
+import * as CallbackProperty from 'cesium/Source/DataSources/CallbackProperty';
 
+const viewerWrapper = new ViewerWrapper('http://localhost', 3001, 1, 'cesiumContainer');
+const viewer = viewerWrapper.viewer;
 
-var EllipsoidTerrainProvider = require('cesium/Source/Core/EllipsoidTerrainProvider');
-var Cartesian3 = require('cesium/Source/Core/Cartesian3');
-var CesiumMath = require('cesium/Source/Core/Math');
-var Cartographic = require('cesium/Source/Core/Cartographic');
-var Ellipsoid = require('cesium/Source/Core/Ellipsoid');
-var Color = require('cesium/Source/Core/Color');
-var Transforms = require('cesium/Source/Core/Transforms');
-var PointPrimitiveCollection = require('cesium/Source/Scene/PointPrimitiveCollection');
-var sampleTerrain = require('cesium/Source/Core/sampleTerrain');
-var ScreenSpaceEventHandler = require('cesium/Source/Core/ScreenSpaceEventHandler');
-var ScreenSpaceEventType = require('cesium/Source/Core/ScreenSpaceEventType');
-var CallbackProperty = require('cesium/Source/DataSources/CallbackProperty');
-
-var viewerWrapper = new ViewerWrapper('http://localhost', 3001, 1, 'cesiumContainer');
-var viewer = viewerWrapper.viewer;
-
-var camera = viewer.scene.camera;
+const camera = viewer.scene.camera;
 /*
 var center = Cartesian3.fromDegrees(-155.20178273, 19.36479555);
 var points = scene.primitives.add(new PointPrimitiveCollection());
@@ -137,7 +133,7 @@ function getLocation(data){
 	if (doPrintLatLong){
 			coords = JSON.parse(data);
 			if(coords.latitude != 0 && coords.longitude != 0){
-				var wrappedCoords = coords.longitude.toString() + ',' +
+				const wrappedCoords = coords.longitude.toString() + ',' +
 				coords.latitude.toString() +'</br>';
 				coordsContainer.innerHTML = wrappedCoords+coordsContainer.innerHTML;
 				gps_tracks.addPoint(coords.latitude, coords.longitude);
@@ -176,7 +172,7 @@ gpsmesh.connect();
 
 gpstrack = messenger.addChannel({
     name: 'gpstrack',
-    initial: function (data) {
+    onconnect: function (data) {
         return data
     },
     onrecieve: function(data){
@@ -228,6 +224,16 @@ getpextant = messenger.addChannel({
             });
             viewer.zoomTo(entity);
         });
+    }
+});
+
+meshmsg = messenger.addChannel({
+    name:'meshmessenger',
+    send: function(data) {
+        return data
+    },
+    onrecieve: function (data) {
+        console.log(data);
     }
 });
 
