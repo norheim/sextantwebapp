@@ -66,8 +66,10 @@ class ViewerWrapper{
             destination: idaho_destination,
             duration: 3,
             complete: function(){
-                self.addTerrain(self.port, 'tilesets/HW_flow_terrain');
-                self.addImagery(self.port, 'CustomMaps/HW_full_drone');
+                //self.addTerrain('tilesets/HI_air_imagery');
+                self.addTerrain('HI_air_imagery', 'https://s3-us-west-2.amazonaws.com/sextantdata');
+                self.addImagery('HI_air_hillshade', 'https://s3-us-west-2.amazonaws.com/sextantdata');
+                //  'https://s3-us-west-2.amazonaws.com/sextantdata'
                 //self.addImagery('3001', 'CustomMaps/HI_air_imagery_relief_100');
                 self.addLatLongHover();
             }
@@ -86,7 +88,7 @@ class ViewerWrapper{
     }
 
     serveraddress(port){
-        return this.host + ':' + port;
+        return this.host + ':' + this.port;
     };
 
     addGeoPoint(vizsocket){
@@ -128,21 +130,21 @@ class ViewerWrapper{
         }.bind(this), ScreenSpaceEventType.MOUSE_MOVE);
     };
 
-    addImagery(port, folder_location){
-        if(typeof port === "undefined") {
-            port = this.port;
+    addImagery(folder_location, image_address){
+        if(typeof image_address === "undefined") {
+            image_address = this.serveraddress();
         }
         this.layerList[folder_location] = this.layers.addImageryProvider(new CreateTileMapServiceImageryProvider({
-            url : this.serveraddress(port) + '/' + folder_location
+            url : image_address + '/' + folder_location
         }));
     };
 
-    addTerrain(port, folder_location) {
-        if(typeof port === "undefined") {
-            port = this.port;
+    addTerrain(folder_location, image_address) {
+        if(typeof image_address === "undefined") {
+            image_address = this.serveraddress();
         }
         const new_terrain_provider = new CesiumTerrainProvider({
-            url : this.serveraddress(port) + '/' + folder_location
+            url : image_address + '/' + folder_location
         });
         this.terrainList[folder_location] = new_terrain_provider;
         this.viewer.scene.terrainProvider = new_terrain_provider;
