@@ -7,7 +7,7 @@ import {SSE} from './sseUtils'
 const host = 'http://localhost';
 //const host = 'http://18.189.2.237';
 const viewerWrapper = new ViewerWrapper(host, 3001, 1, 'cesiumContainer');
-const sse = new SSE('https://localhost');
+//const sse = new SSE('https://localhost');
 const viewer = viewerWrapper.viewer;
 const camera = viewer.scene.camera;
 
