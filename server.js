@@ -46,8 +46,8 @@ app.use(express.static(cesiumPath));
 // Host terrain tiles
 // TODO: move terrain folder in here?
 //const terrainPath = 'https://s3-us-west-2.amazonaws.com/sextantdata';
-const terrainPath = 'C:\\Users\\johan\\Dropbox (MIT)\\BASALT\\pextant\\data\\maps\\terrain';
-app = terrainServer(app, terrainPath);
+//const terrainPath = 'C:\\Users\\johan\\Dropbox (MIT)\\BASALT\\pextant\\data\\maps\\terrain';
+//app = terrainServer(app, terrainPath);
 
 //require("!style!css!./style.css");
 

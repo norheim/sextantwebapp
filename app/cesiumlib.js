@@ -38,7 +38,7 @@ class ViewerWrapper{
             terrainExaggeration : terrainExaggeration,
             baseLayerPicker : false,
             terrainProvider : terrainProvider,
-            imageryProvider : imageryProvider
+            //imageryProvider : imageryProvider
 
         });
         viewer.infoBox.frame.sandbox =
@@ -50,8 +50,8 @@ class ViewerWrapper{
             destination: hawaii_destination,
             duration: 3,
             complete: function(){
-                self.addTerrain('tilesets/HI_highqual');
-                self.addImagery('CustomMaps/MU_Pan_Sharp_contrast');
+                //self.addTerrain('tilesets/HI_highqual');
+                //self.addImagery('CustomMaps/MU_Pan_Sharp_contrast');
                 //  'https://s3-us-west-2.amazonaws.com/sextantdata'
                 // console.log('zoomed');
                 //self.addImagery('CustomMaps/HI_air_imagery_relief_100');
