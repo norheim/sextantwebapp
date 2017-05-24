@@ -2,7 +2,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name=viewport content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+
     <title>SEXTANT</title>
 </head>
 
@@ -30,10 +31,10 @@
 	<div class="input-group"  role="group" >
 		<span class="input-group-addon">GPS coords</span>
 		<button class="btn btn-default" type="button" onclick="start()">
-			<span class="glyphicon glyphicon-play" aria-hidden="true"></span>Start
+			Start
 		</button>
 		<button class="btn btn-default" type="button" onclick="stop()">
-			<span class="glyphicon glyphicon-stop" aria-hidden="true"></span>Stop
+			Stop
 		</button>
 	</div>
 
@@ -55,13 +56,17 @@
 	  <button type="button" class="btn btn-default" onclick="calibrate()">Calibrate</button>
 	  <div id="hovercoord"></div>
 	  Coordinates
+      <div>
+          More stuff:
+          <button onclick="sextant_api()">Call sextant for realz</button>
+      </div>
     <div id="coords">
 
     </div>
-    <div id='credits' >
-
-    </div>
   </div>
+	<div id='credits' >
+
+	</div>
  </div>
 
 <script src="/build/bundle.js"></script>
@@ -70,9 +75,22 @@
 		sextant.heading(event.alpha);
 	}, true);*/
 
-	/* Current Plotly.js version */
-	//console.log( Plotly.BUILD );
-	//sextant.plotly.setReference(Plotly);
+    function sextant_api() {
+        json_data = {
+            waypoints: [
+                [  19.36479555, -155.20178273],
+                [  19.3660102 , -155.2002431 ],
+                [  19.36612641, -155.20061863],
+                [  19.36670636, -155.20098881]
+            ],
+            time: "2pm"
+        };
+
+        $.post("http://localhost:5000/", JSON.stringify(json_data))
+            .done(function (data) {
+                alert("Data Loaded: " + data);
+            });
+    }
 
 	function stop(){
 		gpstracksilencer.connect();

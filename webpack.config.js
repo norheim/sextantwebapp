@@ -1,11 +1,12 @@
-var path = require('path');
-var webpack = require('webpack');
+const path = require('path');
+const webpack = require('webpack');
 
-var nodeModulesPath = path.resolve(__dirname, 'node_modules');
-var buildPath = path.resolve(__dirname, 'public', 'build');
-var mainPath = path.resolve(__dirname, 'app', 'maps.js');
+const nodeModulesPath = path.resolve(__dirname, 'node_modules');
+const buildPath = path.resolve(__dirname, 'public', 'build');
+const mainPath = path.resolve(__dirname, 'app', 'index.js');
 
-config = {
+const config = {
+    devtool: "source-map",
     resolve: {
         modules: [
             path.resolve('./node_modules')
@@ -19,6 +20,7 @@ config = {
         path: buildPath,
         publicPath: '/build/',
         filename: 'bundle.js',
+        libraryTarget: "var",
         library: 'sextant',
         sourcePrefix: '' // required for cesium
     },
@@ -33,6 +35,9 @@ config = {
     ],
 
     module: {
+        noParse: [
+            /.pako_inflate.js/ //this module seems to cause some warning apparently
+        ],
         unknownContextCritical : false,
         loaders: [
             {test: /\.json$/, loader: "json-loader"},
@@ -47,11 +52,13 @@ config = {
             },
             {test: /\.js$/, loader: 'babel', exclude: [nodeModulesPath]},
             {test: /\.css$/, loader: "style!css" },
-            {test: /\.(png|gif|jpg|jpeg)$/, loader: "file-loader"},
-            {test: /\.(woff2?|svg)$/, loader: 'url?limit=10000' },
-            {test: /\.(ttf|eot)$/, loader: 'file' },
+            {test: /\.(png|gif|jpg|jpeg|glsl)$/, loader: "file-loader"},
+            {test: /\.(woff|woff2|eot|ttf|svg)$/, loader: 'url?limit=10000' },
             {test: /node_modules/, loader: 'ify'}
         ]
+    },
+    node: {
+        fs: "empty" //bug fix for cannot resolve module fs error
     }
 };
 

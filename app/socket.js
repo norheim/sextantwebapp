@@ -56,12 +56,13 @@ class ComsChannels{
 
 	send(JSONData){
 		console.log('Sending to: '+this.channelname);
-		this.messenger.emit(this.channelname, JSONData);
+		console.log(JSONData);
+		this.messenger.emit(JSONData);
 	};
 
 	requestData(data){
 		console.log('Requesting: '+this.channelname);
-		this.messenger.emit(this.channelname, '');
+		this.messenger.emit('');
 	}
 }
 
@@ -76,7 +77,7 @@ const messageChannel = messenger.addChannel({
 export default messenger;
 
 socket.on('connect', function(){
-	document.getElementById('header').style.backgroundColor = 'green';
+	//document.getElementById('header').style.backgroundColor = 'green';
 	console.log('connected');
 	messenger.socketLoaded = true;
 	console.log(messenger.channels);
@@ -85,6 +86,6 @@ socket.on('connect', function(){
 }.bind(this));
 
 socket.on('disconnect', function(){
-    document.getElementById('header').style.backgroundColor = 'transparent';
+    //document.getElementById('header').style.backgroundColor = 'transparent';
 	console.log('disconnected');
 });

@@ -2,7 +2,8 @@
  * Created by johan on 2/24/2017.
  */
 import messenger from './socket';
-import {addObject, updateObject} from './redux/actions_viz'
+/*import {addObject, updateObject} from './redux/actions_viz'
+
 class ObjectVizTracker{
     constructor(){
         this.objects = [];
@@ -27,11 +28,10 @@ class ObjectVizTracker{
     }
 }
 
-
 messenger.addChannel({
     name: 'newobject',
 });
 
-messenger.addChannel({
-    name: 'newobject',
-});
+export const objviz = new ObjectVizTracker();*/
+
+

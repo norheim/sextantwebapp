@@ -27,12 +27,26 @@ const port = (process.env.PORT || 3001);
 const publicPath = path.resolve(__dirname, 'public');
 app.use(express.static(publicPath));
 
+/* // For rendering files to jupyter notebook
+app.get('/CustomMaps/:tileset/:z/:x/:y.png', function (req, res) {
+    const x = req.params.x;
+    let y = req.params.y;
+    const z = req.params.z;
+    y = 2**z-y-1;
+
+    const tileset = req.params.tileset;
+    console.log(path.resolve(__dirname, 'public', 'CustomMaps', tileset, z, x, y + '.png'));
+    //res.set('Content-Encoding', 'gzip');
+    res.sendFile(path.resolve(__dirname, 'public', 'CustomMaps', tileset, z, x, y + '.png'));
+});*/
+
 const cesiumPath = path.resolve(__dirname, 'node_modules', 'cesium', 'Build','Cesium');
 app.use(express.static(cesiumPath));
 
 // Host terrain tiles
 // TODO: move terrain folder in here?
-const terrainPath = 'C:\\Users\\johan\\Dropbox (MIT)\\BASALT\\pextant\\pextant\\maps\\terrain';
+//const terrainPath = 'https://s3-us-west-2.amazonaws.com/sextantdata';
+const terrainPath = 'C:\\Users\\johan\\Dropbox (MIT)\\BASALT\\pextant\\data\\maps\\terrain';
 app = terrainServer(app, terrainPath);
 
 //require("!style!css!./style.css");

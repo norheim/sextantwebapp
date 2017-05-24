@@ -8,6 +8,8 @@ import {ViewerWrapper} from './cesiumlib';
 
 console.log('creating the wrapper');
 const port = (process.env.PORT || 3001);
-const viewerWrapper = new ViewerWrapper('http://localhost', port, 1, 'cesiumContainer');
+const host = 'http://localhost';
+//const host = 'http://18.189.2.237';
+const viewerWrapper = new ViewerWrapper(host, port, 3, 'cesiumContainer');
 const viewer = viewerWrapper.viewer;
 const camera = viewer.scene.camera;

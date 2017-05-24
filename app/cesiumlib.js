@@ -1,30 +1,11 @@
 import 'cesium/Source/Widgets/widgets.css';
 import './style.css';
-import {setBaseUrl} from 'cesium/Source/Core/buildModuleUrl';
-setBaseUrl('./');
-
+import buildModuleUrl from 'cesium/Source/Core/buildModuleUrl';
+buildModuleUrl.setBaseUrl('./');
 // Load all cesium components required
-import Viewer from 'cesium/Source/Widgets/Viewer/Viewer';
-import EllipsoidTerrainProvider from 'cesium/Source/Core/EllipsoidTerrainProvider';
-import Cartesian3 from 'cesium/Source/Core/Cartesian3';
-import CesiumMath from 'cesium/Source/Core/Math';
-import Cartographic from 'cesium/Source/Core/Cartographic';
-import Ellipsoid from 'cesium/Source/Core/Ellipsoid';
-import Color from 'cesium/Source/Core/Color';
-import Transforms from 'cesium/Source/Core/Transforms';
-import PointPrimitiveCollection from 'cesium/Source/Scene/PointPrimitiveCollection';
-import sampleTerrain from 'cesium/Source/Core/sampleTerrain';
-import ScreenSpaceEventHandler from 'cesium/Source/Core/ScreenSpaceEventHandler';
-import ScreenSpaceEventType from 'cesium/Source/Core/ScreenSpaceEventType';
-import CallbackProperty from 'cesium/Source/DataSources/CallbackProperty';
-import ColorGeometryInstanceAttribute from 'cesium/Source/Core/ColorGeometryInstanceAttribute';
-import GeometryInstance from 'cesium/Source/Core/GeometryInstance';
-import Rectangle from 'cesium/Source/Core/Rectangle';
-import RectangleGeometry from 'cesium/Source/Core/RectangleGeometry';
-import EntityCollection from 'cesium/Source/DataSources/EntityCollection';
-import CreateTileMapServiceImageryProvider from 'cesium/Source/Scene/createTileMapServiceImageryProvider';
-import GroundPrimitive from 'cesium/Source/Scene/GroundPrimitive';
-import CesiumTerrainProvider from 'cesium/Source/Core/CesiumTerrainProvider';
+import {Viewer, EllipsoidTerrainProvider, Cartesian3, CesiumMath, Cartographic, Ellipsoid, Color,
+sampleTerrain, ScreenSpaceEventHandler, ScreenSpaceEventType, Rectangle,
+    CreateTileMapServiceImageryProvider, CesiumTerrainProvider} from './demo_code/cesium_imports'
 
 class ViewerWrapper{
     constructor(host, port, terrainExaggeration, container) {
@@ -45,6 +26,7 @@ class ViewerWrapper{
 
         // Basic texture for the full planet
         this.layerList['default'] = 'Assets/Textures/NaturalEarthII';
+
         const imageryProvider = CreateTileMapServiceImageryProvider({
             url : this.serveraddress(this.port) + '/' + this.layerList['default'],
             fileExtension : 'jpg'
@@ -59,18 +41,20 @@ class ViewerWrapper{
             imageryProvider : imageryProvider
 
         });
+        viewer.infoBox.frame.sandbox =
+            "allow-same-origin allow-top-navigation allow-pointer-lock allow-popups allow-forms allow-scripts";
         self = this;
         const idaho_destination = Cartesian3.fromDegrees(-113.5787682, 43.4633101, 5000);
         const hawaii_destination = Cartesian3.fromDegrees(-155.2118, 19.3647, 5000);
         const hawaii = viewer.scene.camera.flyTo({
-            destination: idaho_destination,
+            destination: hawaii_destination,
             duration: 3,
             complete: function(){
-                //self.addTerrain('tilesets/HI_air_imagery');
-                self.addTerrain('HI_air_imagery', 'https://s3-us-west-2.amazonaws.com/sextantdata');
-                self.addImagery('HI_air_hillshade', 'https://s3-us-west-2.amazonaws.com/sextantdata');
+                self.addTerrain('tilesets/HI_highqual');
+                self.addImagery('CustomMaps/MU_Pan_Sharp_contrast');
                 //  'https://s3-us-west-2.amazonaws.com/sextantdata'
-                //self.addImagery('3001', 'CustomMaps/HI_air_imagery_relief_100');
+                // console.log('zoomed');
+                //self.addImagery('CustomMaps/HI_air_imagery_relief_100');
                 self.addLatLongHover();
             }
         });
@@ -254,7 +238,7 @@ class ViewerWrapper{
             //console.log(cartographicArray);
             self = this;
             const ellipsoid = this.viewer.scene.globe.ellipsoid;
-            sampleTerrain(this.viewer.terrainProvider, 15, cartographicArray)
+            sampleTerrain(this.viewer.terrainProvider, 18, cartographicArray)
                 .then(function (raisedPositionsCartograhpic) {
                     raisedPositionsCartograhpic.forEach(function (coord, i) {
                         raisedPositionsCartograhpic[i].height *= self.terrainExaggeration;
