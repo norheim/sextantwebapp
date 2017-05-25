@@ -40,3 +40,6 @@ Webkit requires some configuration: webkit.config.js, where you tell it what syn
 If you looked a bunch at the code already, you will notice there seems to be a lot of weird overhead in server.js and webkit.config.js. Although in webkit.config.js some of the overhead configs are for cesium to properly work, the extra code is mostly to take advantage of a really cool feature that the bundling process allows for: hot module reload.
 
 It lets you edit your javascript front end code(in one of your modules), and as soon as you click save, it will rebuild automatically, and on top of that the webpage with the <script> include tag with build.js in it will make sure to reload the new bundled build.js to get the most recent version of the javascript. This save some significant reloading time very time a change is made. 
+
+# Common fallpits
+A couple of things will easily crash things without you really understanding what's going. The most dangerous is forgetting to declare a variable in ES6. You always need to use const or let to declare a variable, and if this is not done the debugger will give you obscure errors that hide the real problem.
