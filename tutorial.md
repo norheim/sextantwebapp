@@ -35,3 +35,8 @@ node.js comes with some libraries that simplify this process a ton by instead bu
 I know of two libraries that can tackle both of these challenges, bundling and translating: browserify and webkit. We are using webkit because... just because. It seems to be the easiest to setup, but don't take my words for it.
 
 Webkit requires some configuration: webkit.config.js, where you tell it what syntax of javascript your are writing in (e.g. ES5 or ES6), the name of your output bundle (normally bundle.js), and some other things. For production you would actually generate a physical bundle.js file, however the way we run webkit right now, bundle.js is served by **express**(remember from earlier? it is our backend server) without being stored physically somewhere in a file.
+
+### Hot Module Reload
+If you looked a bunch at the code already, you will notice there seems to be a lot of weird overhead in server.js and webkit.config.js. Although in webkit.config.js some of the overhead configs are for cesium to properly work, the extra code is mostly to take advantage of a really cool feature that the bundling process allows for: hot module reload.
+
+It lets you edit your javascript front end code(in one of your modules), and as soon as you click save, it will rebuild automatically, and on top of that the webpage with the <script> include tag with build.js in it will make sure to reload the new bundled build.js to get the most recent version of the javascript. This save some significant reloading time very time a change is made. 
