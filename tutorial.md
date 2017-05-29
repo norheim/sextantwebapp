@@ -133,6 +133,8 @@ This guy adds a little box displaying latitude, longitude and altitude of the po
 ### ViewerWrapper.addMesh
 This is still a little experimental: the idea is that it would show a local filled contour map based on elevation (one color is low relative elevations, another is high), around the gps position of the person. Mainly for the purpose of terrain verification, unfortunately the feature got finished on the last day, and was never tested in the field. 
 
+EDIT: Discovered the existence of: https://github.com/PropellerAero/cesium-elevation-gradient, which could probably fully replace the purpose of this function.
+
 ### index.js, LineString
 This helper function is a wrapper around PolyLine, combined with getRaisedPositions and quick setting of color options.
 
