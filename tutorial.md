@@ -121,5 +121,32 @@ Fear not however, this has been taken care off by doing some rerouting in the fi
 - reroute any call to a terrain_folder/layer.json to the the layer.json being served by express, since this file is in the public folder already
 - reroute any call to the dummy file to smallterrain-blank.terrain, which is also already being served by express, since this file is in the public folder
 
-## Drawing in Cesium
-Coming soon!
+## Using Cesium and functionalities thus far
+Once the specific library has been loaded with the import statement as described earlier, cesium can be used similarly to all the sandbox examples on cesium.com. There are a couple convenience functions I have added however, that I think might be useful:
+
+### ViewerWrapper.getRaisedPositions
+Although some cesium shapes seem to drape on the terrain, polyllines do not, and if they are just constructed with latitude and longitude, the lines will appear buried under everything else. This function takes care of that by returning a promise(aka, resolves with .then) which gives you the right height coordinate so that you can draw the polyline at the level of the terrain.
+
+### ViewerWrapper.addLatLongHover
+This guy adds a little box displaying latitude, longitude and altitude of the point your mouse pointer hovers over. It could use getRaisedPositions to achieve this, but uses a raycasting technique instead (from your mouse to the "pixel" it hits on the terrain). (Comment to self: this also makes me wonder whether there is any significant difference between using the raycasting and the getRaisedPositions)
+
+### ViewerWrapper.addMesh
+This is still a little experimental: the idea is that it would show a local filled contour map based on elevation (one color is low relative elevations, another is high), around the gps position of the person. Mainly for the purpose of terrain verification, unfortunately the feature got finished on the last day, and was never tested in the field. 
+
+### index.js, LineString
+This helper function is a wrapper around PolyLine, combined with getRaisedPositions and quick setting of color options.
+
+### index.js, DynamicLines
+This is the "trajectory" rendering function, aka as points get pushed it displays the new point and all previous ones as one line.
+
+
+### index.js heading
+Rotates the map to align with a certain heading
+
+
+## Interfacing with index.html
+I guess all javascript we have talked about thus far is kind useless if it is not tied to actions by the user interacting with the html view. 
+
+Enabling the interfacing between all the function written and index.html is as simple as including any function you want to export in the module.exports of index.js. Since index.js is the entry point for bundling javascript, then webpack will know that it should expose these functions when it is included in a script tag  in index.html
+
+Then on the html page, you simple call the function by typing sextant.functionname() or instantiate a class with new sextant.Classname().
